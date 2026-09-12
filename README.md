@@ -41,6 +41,3 @@ Local testing-এর জন্য `python -m http.server 8080` চালিয�
 - automatic backup/export
 - Bengali calendar/date formatting
 - PWA/offline read-only cache
-
-## 8) এই সংস্করণে পুরোনো Excel migration
-`migration/` ফোল্ডারে 2021–2025-এর normalized CSV তৈরি করা হয়েছে। 34 জন নামসহ সদস্য শনাক্ত হয়েছে; Excel-এর কিছু অতিরিক্ত নম্বরের সারিতে নাম/জমা নেই, সেগুলো সদস্য হিসেবে import করা হয়নি। Legacy/Bijoy নাম স্বয়ংক্রিয়ভাবে ভুল বাংলা হয়ে যাওয়ার ঝুঁকি থাকায় `members_import.csv`-এ Unicode নাম যাচাই করে পূরণ করতে হবে।
