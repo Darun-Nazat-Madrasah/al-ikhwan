@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f5132">
+  <title>আল ইহওয়ান ইসলামী সংস্থা বাংলাদেশ — হিসাব</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo">আ</span><div><strong id="orgName">আল ইহওয়ান ইসলামী সংস্থা বাংলাদেশ</strong><small>অনলাইন হিসাব ব্যবস্থাপনা</small></div></div>
+  <button id="loginBtn" class="btn ghost">অ্যাডমিন লগইন</button>
+</header>
+
+<nav class="nav">
+  <button data-page="home" class="navbtn active">হোম</button>
+  <button data-page="members" class="navbtn">সকল সদস্যের হিসাব</button>
+  <button data-page="yearly" class="navbtn">বার্ষিক হিসাব</button>
+  <button data-page="notices" class="navbtn">নোটিশ</button>
+  <button data-page="admin" class="navbtn admin-only hidden">অ্যাডমিন</button>
+</nav>
+
+<main>
+<section id="home" class="page active">
+  <div class="hero">
+    <div><span class="eyebrow">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ</span><h1>স্বচ্ছ ও দীর্ঘমেয়াদি হিসাব ব্যবস্থাপনা</h1><p>মাসিক জমা, বকেয়া, লাভ, খরচ, বিনিয়োগ ও নোটিশ—এক জায়গায়।</p></div>
+  </div>
+  <div id="homeCards" class="cards"></div>
+  <div class="panel"><div class="panelhead"><h2>সাম্প্রতিক নোটিশ</h2><button class="textbtn" data-page="notices">সব দেখুন →</button></div><div id="homeNotices"></div></div>
+</section>
+
+<section id="members" class="page">
+  <div class="pagehead"><div><h1>সকল সদস্যের হিসাব</h1><p>গোপন তথ্য ছাড়া প্রকাশ্য সারসংক্ষেপ।</p></div><input id="memberSearch" class="search" placeholder="নাম বা সদস্য আইডি খুঁজুন…"></div>
+  <div class="tablewrap"><table><thead><tr><th>আইডি</th><th>নাম</th><th>মোট জমা</th><th>বকেয়া</th><th>প্রাপ্য লাভ</th></tr></thead><tbody id="memberRows"></tbody></table></div>
+</section>
+
+<section id="yearly" class="page">
+  <div class="pagehead"><div><h1>বার্ষিক হিসাব</h1><p>প্রতিষ্ঠার শুরু থেকে বছরভিত্তিক হিসাব সংরক্ষিত থাকবে।</p></div><select id="yearSelect"></select></div>
+  <div id="yearCards" class="cards"></div>
+  <div class="panel"><h2>সব বছরের সারসংক্ষেপ</h2><div class="tablewrap"><table><thead><tr><th>বছর</th><th>সদস্য</th><th>জমা</th><th>বকেয়া</th><th>বিনিয়োগ</th><th>লাভ</th><th>খরচ</th><th>ব্যালেন্স</th></tr></thead><tbody id="yearRows"></tbody></table></div></div>
+</section>
+
+<section id="notices" class="page">
+  <div class="pagehead"><div><h1>নোটিশ</h1><p>প্রকাশিত নোটিশ সবাই দেখতে পারবেন।</p></div></div>
+  <div id="noticeList" class="noticegrid"></div>
+  <div class="panel admin-only hidden"><h2>নতুন নোটিশ</h2><form id="noticeForm" class="formgrid"><input name="title" placeholder="নোটিশের শিরোনাম" required><textarea name="body" placeholder="নোটিশের বিস্তারিত" required></textarea><button class="btn" type="submit">প্রকাশ করুন</button></form></div>
+</section>
+
+<section id="admin" class="page">
+  <div class="pagehead"><div><h1>অ্যাডমিন প্যানেল</h1><p>শুধু অনুমোদিত অ্যাডমিন এই অংশ ব্যবহার করতে পারবেন।</p></div><button id="logoutBtn" class="btn danger">লগআউট</button></div>
+  <div class="admin-tabs">
+    <button data-tab="member" class="tab active">সদস্য</button><button data-tab="payment" class="tab">মাসিক জমা</button><button data-tab="finance" class="tab">লাভ/খরচ/বিনিয়োগ</button><button data-tab="settings" class="tab">সেটিংস</button>
+  </div>
+  <div id="admin-member" class="adminpane active panel"><h2>সদস্য যোগ</h2><form id="memberForm" class="formgrid"><input name="member_code" placeholder="সদস্য আইডি" required><input name="full_name" placeholder="সদস্যের নাম" required><input name="phone" placeholder="মোবাইল (গোপন)" type="tel"><input name="join_date" type="date"><select name="status"><option value="active">সক্রিয়</option><option value="inactive">নিষ্ক্রিয়</option></select><textarea name="notes" placeholder="অভ্যন্তরীণ নোট"></textarea><button class="btn">সদস্য সংরক্ষণ</button></form></div>
+  <div id="admin-payment" class="adminpane panel"><h2>মাসিক জমা</h2><form id="paymentForm" class="formgrid"><select name="member_id" id="paymentMember" required></select><input name="payment_year" type="number" required><select name="payment_month" required></select><input name="amount" type="number" min="0" step="0.01" placeholder="টাকা" required><input name="paid_at" type="date"><input name="note" placeholder="নোট"><button class="btn">জমা সংরক্ষণ</button></form></div>
+  <div id="admin-finance" class="adminpane panel"><h2>আর্থিক এন্ট্রি</h2><form id="financeForm" class="formgrid"><input name="entry_year" type="number" required><input name="entry_date" type="date" required><select name="entry_type"><option value="profit">লাভ</option><option value="expense">খরচ</option><option value="investment">বিনিয়োগ</option><option value="other_income">অন্যান্য আয়</option><option value="other_expense">অন্যান্য খরচ</option><option value="opening_balance">প্রারম্ভিক ব্যালেন্স</option></select><input name="amount" type="number" min="0" step="0.01" required placeholder="টাকা"><input name="description" placeholder="বিবরণ"><button class="btn">সংরক্ষণ</button></form></div>
+  <div id="admin-settings" class="adminpane panel"><h2>সংস্থার সেটিংস</h2><form id="settingsForm" class="formgrid"><input name="organization_name" required><input name="foundation_year" type="number" required><input name="monthly_due" type="number" step="0.01" required><button class="btn">সেটিংস সংরক্ষণ</button></form></div>
+</section>
+</main>
+
+<div id="modal" class="modal hidden"><div class="modalbox"><button id="closeModal" class="close">×</button><h2>অ্যাডমিন লগইন</h2><form id="loginForm" class="formgrid"><input name="email" type="email" placeholder="ইমেইল" required><input name="password" type="password" placeholder="পাসওয়ার্ড" required><button class="btn">লগইন</button></form><p class="hint">প্রথম অ্যাডমিন তৈরি করতে Supabase Dashboard → Authentication → Users থেকে ইউজার তৈরি করুন, তারপর SQL Editor-এ admin_users-এ তার user id যোগ করুন।</p></div></div>
+<div id="toast" class="toast"></div>
+<script src="config.js"></script><script src="app.js"></script>
+</body></html>
