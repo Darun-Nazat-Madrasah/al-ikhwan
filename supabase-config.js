@@ -1,5 +1,5 @@
 // Supabase Configuration
-// আল ইহওয়ান ইসলামী সংস্থা বাংলাদেশ
+// আল ইখওয়ান ইসলামী সংস্থা বাংলাদেশ
 
 window.SUPABASE_URL = 'https://zxbkfutnkdenxwdajpsi.supabase.co';
 
