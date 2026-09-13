@@ -23,8 +23,3 @@ Admin login Supabase Auth ব্যবহার করে এবং admin_users-
 - Expense form-এর `date` column mismatch ঠিক করা হয়েছে।
 - Admin-only `admin_member_profit_accounts` view যোগ করা হয়েছে এবং সাধারণ সদস্যদের জন্য বন্ধ রাখা হয়েছে।
 - ২০২১ সাল থেকে মোট হিসাব ও বর্তমান অবশিষ্ট fund view এক করা হয়েছে।
-
-## Excel data import (v9)
-- 35 member names imported and converted from legacy Bijoy/SutonnyMJ to Unicode Bangla.
-- Monthly paid/due data for 2021-2025 imported from the Excel year sheets.
-- Aggregate Excel summary figures are stored in `legacy_excel_summary` without falsely assigning them to a particular year.
