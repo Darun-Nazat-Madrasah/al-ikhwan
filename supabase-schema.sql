@@ -69,28 +69,90 @@ create policy "admin notices all" on notices for all using(public.is_admin()) wi
 create policy "admin settings all" on settings for all using(public.is_admin()) with check(public.is_admin());
 
 -- Public safe summary: member profit is deliberately excluded.
-create or replace view public.member_public_summary as
-select m.id,m.name,m.status,coalesce(sum(p.paid_amount),0) total_deposit,coalesce(sum(greatest(p.required_amount-p.paid_amount,0)),0) due
-from members m left join payments p on p.member_id=m.id where m.status='active' group by m.id,m.name,m.status;
-
--- CURRENT FUND RULE
--- total member deposits + recorded profit-after-expenses - active asset allocations - member settlements.
--- Important: total_profit must be the net profit AFTER expenses, so expenses are not subtracted again here.
--- Assets include land, products given/purchased for someone, investments, or other amounts moved out of cash fund.
-create or replace view public.current_fund_summary as
+create or replace view public.public_member_accounts as
 select
-  coalesce((select sum(paid_amount) from payments),0) +
-  coalesce((select sum(total_profit) from profits),0) -
-  coalesce((select sum(amount) from assets where status='active'),0) -
-  coalesce((select sum(amount_paid) from member_settlements),0) as current_fund;
+  m.id as member_id,
+  m.name,
+  m.father_name,
+  coalesce(sum(p.paid_amount),0) as total_deposit,
+  coalesce(sum(greatest(p.required_amount-p.paid_amount,0)),0) as total_due
+from public.members m
+left join public.payments p on p.member_id=m.id
+where m.status='active'
+group by m.id,m.name,m.father_name;
 
-create or replace view public.annual_summary as
-select y.year, coalesce((select sum(paid_amount) from payments p where p.year=y.year),0) total_deposit,
-coalesce((select total_profit from profits pr where pr.year=y.year),0) total_profit,
-coalesce((select sum(amount) from expenses e where e.year=y.year),0) total_expense,
-coalesce((select sum(amount) from investments i where i.year=y.year),0) total_investment,
-coalesce((select sum(amount) from assets a where a.year=y.year and a.status='active'),0) asset_amount
-from generate_series(2021, extract(year from current_date)::int) y(year);
+create or replace view public.public_payment_history as
+select
+  p.id,
+  p.member_id,
+  m.name,
+  p.year,
+  p.month,
+  p.required_amount,
+  p.paid_amount,
+  greatest(p.required_amount-p.paid_amount,0) as due_amount,
+  p.payment_date
+from public.payments p
+join public.members m on m.id=p.member_id
+where m.status='active';
 
+create or replace view public.public_yearly_summary as
+select
+  y.year,
+  coalesce((select sum(p.paid_amount) from public.payments p where p.year=y.year),0) as total_deposit,
+  coalesce((select sum(greatest(p.required_amount-p.paid_amount,0)) from public.payments p where p.year=y.year),0) as total_due,
+  coalesce((select pr.total_profit from public.profits pr where pr.year=y.year),0) as total_profit,
+  coalesce((select sum(e.amount) from public.expenses e where e.year=y.year),0) as total_expense,
+  coalesce((select sum(i.amount) from public.investments i where i.year=y.year),0) as total_investment
+from generate_series(2021, extract(year from current_date)::int) as y(year);
+
+-- Total accumulated view from 2021 to the current date.
+create or replace view public.public_all_years_summary as
+select
+  coalesce((select sum(p.paid_amount) from public.payments p where p.year>=2021),0) as total_deposit,
+  coalesce((select sum(greatest(p.required_amount-p.paid_amount,0)) from public.payments p where p.year>=2021),0) as total_due,
+  coalesce((select sum(pr.total_profit) from public.profits pr where pr.year>=2021),0) as total_profit,
+  coalesce((select sum(e.amount) from public.expenses e where e.year>=2021),0) as total_expense,
+  coalesce((select sum(i.amount) from public.investments i where i.year>=2021),0) as total_investment,
+  coalesce((select sum(a.amount) from public.assets a where a.status='active' and a.year>=2021),0) as total_assets,
+  coalesce((select sum(s.amount_paid) from public.member_settlements s where s.settlement_date >= make_date(2021,1,1)),0) as total_settlements,
+  (
+    coalesce((select sum(p.paid_amount) from public.payments p where p.year>=2021),0) +
+    coalesce((select sum(pr.total_profit) from public.profits pr where pr.year>=2021),0) -
+    coalesce((select sum(i.amount) from public.investments i where i.year>=2021),0) -
+    coalesce((select sum(a.amount) from public.assets a where a.status='active' and a.year>=2021),0) -
+    coalesce((select sum(s.amount_paid) from public.member_settlements s where s.settlement_date >= make_date(2021,1,1)),0)
+  ) as current_balance;
+
+create or replace view public.public_notices as
+select id,title,description,publish_date,status
+from public.notices
+where status='published';
+
+-- Admin-only personal profit/dividend view.
+-- Share = member's total deposits / all members' total deposits × net profit.
+create or replace view public.admin_member_profit_accounts as
+select
+  m.id as member_id,
+  m.name,
+  coalesce(sum(p.paid_amount),0) as total_deposit,
+  coalesce(sum(p.paid_amount),0) /
+    nullif((select sum(p2.paid_amount) from public.payments p2),0) *
+    coalesce((select sum(pr.total_profit) from public.profits pr),0) as total_profit_share
+from public.members m
+left join public.payments p on p.member_id=m.id
+where public.is_admin()
+group by m.id,m.name;
+
+-- Compatibility views for the earlier names used in the app/database setup.
+drop view if exists public.member_public_summary;
+drop view if exists public.current_fund_summary;
+drop view if exists public.annual_summary;
+create or replace view public.member_public_summary as select * from public.public_member_accounts;
+create or replace view public.current_fund_summary as select current_balance as current_fund from public.public_all_years_summary;
+create or replace view public.annual_summary as select * from public.public_yearly_summary;
+
+revoke all on public.admin_member_profit_accounts from anon;
+grant select on public.admin_member_profit_accounts to authenticated;
+grant select on public.public_member_accounts, public.public_yearly_summary, public.public_all_years_summary, public.public_payment_history, public.public_notices to anon, authenticated;
 grant select on public.member_public_summary, public.current_fund_summary, public.annual_summary to anon, authenticated;
-grant select on public.members, public.payments, public.assets, public.notices, public.settings to anon, authenticated;
