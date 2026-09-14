@@ -9,8 +9,8 @@
 <body>
 <header class="topbar">
   <div class="brand"><img src="Al ikhwan logo.jpg" alt="আল ইখওয়ান ইসলামী সংস্থার লোগো"><div>
-    <h1>আল ইখওয়ান ইসলামী সংস্থা বাংলাদেশ</h1>
-    <p class="org-subtitle">আল ইখওয়ান ইসলামী সংস্থা</p>
+    <h1>আল ইখওয়ান ইসলামী সংস্থা</h1>
+    <p class="org-subtitle">হিসাব ব্যবস্থাপনা</p>
     <p class="address">বানিপুর, কেন্দুয়া, নেত্রকোনা, মোমেনশাহী, ঢাকা</p>
   </div></div>
   <button class="menu-btn" id="menuBtn" aria-label="মেইন মেনু">☰</button>
@@ -20,7 +20,6 @@
   <button class="menu-close" id="menuClose" aria-label="মেনু বন্ধ করুন">×</button>
   <div class="menu-logo-wrap"><img src="Al ikhwan logo.jpg" alt="আল ইখওয়ান ইসলামী সংস্থার লোগো"></div>
   <div class="menu-heading">মেইন মেনু</div>
-  <a href="#home" data-menu-link="home"><span>⌂</span><b>হোম</b></a>
   <a href="#personal" data-menu-link="personal"><span>👤</span><b>সদস্যদের ব্যক্তিগত হিসাব</b></a>
   <a href="#members" data-menu-link="members"><span>👥</span><b>সকল সদস্যদের হিসাব</b></a>
   <a href="#due" data-menu-link="due"><span>📋</span><b>বকেয়া লিস্ট</b></a>
@@ -30,7 +29,7 @@
 </nav>
 <main>
 <section id="home" class="page-section home-section">
-  <div class="hero"><span class="eyebrow">আল ইখওয়ান ইসলামী সংস্থা</span><h2>হিসাবের তথ্য দেখুন</h2><p>মেইন মেনু ☰ থেকে আপনার প্রয়োজনীয় হিসাবের অপশন নির্বাচন করুন।</p></div>
+  <div class="hero"><span class="eyebrow">আল ইখওয়ান ইসলামী সংস্থা</span><h2>আল ইখওয়ান ইসলামী সংস্থা বাংলাদেশ</h2><p>বানিপুর, কেন্দুয়া, নেত্রকোনা, মোমেনশাহী, ঢাকা</p></div>
   <div class="summary-grid">
     <article class="summary-card"><span>💰 মোট তহবিল</span><strong id="homeFund">৳ ০</strong></article>
     <article class="summary-card"><span>📈 মোট লভ্যাংশ</span><strong id="homeProfit">৳ ০</strong></article>
@@ -41,35 +40,35 @@
 </section>
 
 <section id="personal" class="page-section panel">
-  <button class="back-btn" onclick="location.hash='home'">← হোমে ফিরুন</button><div class="section-title"><div><span class="eyebrow">সদস্য</span><h2>👤 সদস্যদের ব্যক্তিগত হিসাব</h2></div></div>
+  <button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button><div class="section-title"><div><span class="eyebrow">সদস্য</span><h2>👤 সদস্যদের ব্যক্তিগত হিসাব</h2></div></div>
   <div class="filter-grid"><label>সাল নির্বাচন করুন<select id="personalYear"></select></label><label>সদস্য নির্বাচন করুন<select id="personalMember"><option value="">-- সদস্য নির্বাচন করুন --</option></select></label></div>
   <button class="primary full" id="personalSearch">🔎 অনুসন্ধান করুন</button>
   <div id="personalResult" class="report-area"><div class="empty-state">সাল ও সদস্য নির্বাচন করে অনুসন্ধান করুন।</div></div>
 <div class="bottom-actions"><button class="print-btn" onclick="printSection('personalResult')">🖨️ প্রিন্ট করুন</button></div></section>
 
 <section id="members" class="page-section panel">
-  <button class="back-btn" onclick="location.hash='home'">← হোমে ফিরুন</button><div class="section-title"><div><span class="eyebrow">বার্ষিক</span><h2>👥 সকল সদস্যদের হিসাব</h2></div><div class="actions"><button class="secondary" onclick="downloadAllMembersCSV()">⬇️ রিপোর্ট ডাউনলোড</button></div></div>
+  <button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button><div class="section-title"><div><span class="eyebrow">বার্ষিক</span><h2>👥 সকল সদস্যদের হিসাব</h2></div><div class="actions"><button class="secondary" onclick="downloadAllMembersCSV()">⬇️ রিপোর্ট ডাউনলোড</button></div></div>
   <div class="filter-grid one"><label>সাল নির্বাচন করুন<select id="allMembersYear"></select></label></div>
   <button class="primary full" id="allMembersSearch">🔎 অনুসন্ধান করুন</button>
   <div id="allMembersResult" class="report-area"><div class="empty-state">একটি বছর নির্বাচন করে অনুসন্ধান করুন।</div></div>
 <div class="bottom-actions"><button class="print-btn" onclick="printSection('allMembersResult')">🖨️ প্রিন্ট করুন</button></div></section>
 
 <section id="due" class="page-section panel">
-  <button class="back-btn" onclick="location.hash='home'">← হোমে ফিরুন</button><div class="section-title"><div><span class="eyebrow">বকেয়া</span><h2>📋 বকেয়া লিস্ট</h2></div><div class="actions"><button class="secondary" onclick="downloadDueCSV()">⬇️ ডাউনলোড</button></div></div>
+  <button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button><div class="section-title"><div><span class="eyebrow">বকেয়া</span><h2>📋 বকেয়া লিস্ট</h2></div><div class="actions"><button class="secondary" onclick="downloadDueCSV()">⬇️ ডাউনলোড</button></div></div>
   <p class="muted">মাসিক নির্ধারিত জমা ৳৫০০ ধরে বছরে ৳৬,০০০ হিসাব করা হয়েছে।</p>
   <div id="dueResult" class="report-area"><div class="loading">ডাটা লোড হচ্ছে...</div></div>
 <div class="bottom-actions"><button class="print-btn" onclick="printSection('dueResult')">🖨️ প্রিন্ট করুন</button></div></section>
 
 <section id="fund" class="page-section panel">
-  <button class="back-btn" onclick="location.hash='home'">← হোমে ফিরুন</button><div class="section-title"><div><span class="eyebrow">তহবিল</span><h2>💰 অবশিষ্ট তহবিলের খাত</h2></div><div class="actions"><button class="secondary" onclick="downloadAssetsCSV()">⬇️ ডাউনলোড</button></div></div>
+  <button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button><div class="section-title"><div><span class="eyebrow">তহবিল</span><h2>💰 অবশিষ্ট তহবিলের খাত</h2></div><div class="actions"><button class="secondary" onclick="downloadAssetsCSV()">⬇️ ডাউনলোড</button></div></div>
   <div class="summary-grid compact"><article class="summary-card"><span>মোট তহবিল</span><strong id="fundTotal">৳ ০</strong></article><article class="summary-card"><span>মোট লভ্যাংশ</span><strong id="fundProfit">৳ ০</strong></article><article class="summary-card"><span>মোট খরচ</span><strong id="fundExpense">৳ ০</strong></article><article class="summary-card highlight"><span>অবশিষ্ট তহবিল</span><strong id="fundRemaining">৳ ০</strong></article></div>
   <div id="fundResult" class="report-area"></div>
 <div class="bottom-actions"><button class="print-btn" onclick="printSection('fundResult')">🖨️ প্রিন্ট করুন</button></div></section>
 
-<section id="notices" class="page-section panel"><button class="back-btn" onclick="location.hash='home'">← হোমে ফিরুন</button><div class="section-title"><div><span class="eyebrow">ঘোষণা</span><h2>📢 নোটিশ</h2></div></div><div id="noticeResult" class="notice-list"><p class="loading">ডাটা লোড হচ্ছে...</p></div><div class="bottom-actions"><button class="print-btn" onclick="printSection('noticeResult')">🖨️ প্রিন্ট করুন</button></div></section>
+<section id="notices" class="page-section panel"><button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button><div class="section-title"><div><span class="eyebrow">ঘোষণা</span><h2>📢 নোটিশ</h2></div></div><div id="noticeResult" class="notice-list"><p class="loading">ডাটা লোড হচ্ছে...</p></div><div class="bottom-actions"><button class="print-btn" onclick="printSection('noticeResult')">🖨️ প্রিন্ট করুন</button></div></section>
 
 <section id="admin" class="page-section panel">
-  <button class="back-btn" onclick="location.hash='home'">← হোমে ফিরুন</button><div class="section-title"><div><span class="eyebrow">নিরাপদ ব্যবস্থাপনা</span><h2>🔐 এডমিন প্যানেল</h2></div></div>
+  <button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button><div class="section-title"><div><span class="eyebrow">নিরাপদ ব্যবস্থাপনা</span><h2>🔐 এডমিন প্যানেল</h2></div></div>
   <div id="loginBox" class="login-card"><h3>এডমিন লগইন</h3><p class="muted">অনুমোদিত Admin ইমেইল ও পাসওয়ার্ড দিয়ে প্রবেশ করুন।</p><div class="form-grid"><input id="adminEmail" type="email" placeholder="ইমেইল"><input id="adminPassword" type="password" placeholder="পাসওয়ার্ড"></div><button class="primary" id="loginBtn">🔐 লগইন</button><div id="loginMsg" class="msg"></div></div>
   <div id="adminBox" hidden>
     <div class="adminbar"><div><b id="adminUser"></b><span class="admin-badge">ADMIN</span></div><button class="danger" id="logoutBtn">লগআউট</button></div>
