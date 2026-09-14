@@ -1,0 +1,11 @@
+<!-- Add this option inside #manageSelect -->
+<option value="profits">লভ্যাংশ ব্যবস্থাপনা</option>
+
+<!-- Add this block inside #managementArea -->
+<div id="manageProfits" class="admin-data">
+  <h3>📈 লভ্যাংশ ব্যবস্থাপনা</h3>
+  <div id="adminProfits" class="table-wrap"></div>
+</div>
+
+<!-- Add this script immediately AFTER script.js -->
+<script src="profit-management.js"></script>
