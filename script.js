@@ -34,18 +34,32 @@ function fillMemberSelectors(){
   q('personalMember').innerHTML='<option value="">-- সদস্য নির্বাচন করুন --</option>'+opts;
   q('payMember').innerHTML='<option value="">-- সদস্য নির্বাচন করুন --</option>'+opts;
 }
-function memberPaid(m,year){
-  return payments.filter(p=>String(p.member_id)===String(m.id)&&(!year||year==='all'||Number(p.year)===Number(year))).reduce((s,p)=>s+Number(p.paid_amount||0),0);
-}
 function selectedYears(year){
   if(year==='all'||!year) return years;
   return [String(year)];
 }
-function memberRequired(m,year){
-  return selectedYears(year).length*YEARLY_REQUIRED;
+// Excel-এর বার্ষিক হিসাব অনুযায়ী প্রতিটি সদস্যের প্রত্যেক হিসাব বছরে
+// ১২ মাস × ৳৫০০ = ৳৬,০০০ পাওনা। বকেয়া কখনো Database-এর কোনো
+// পুরোনো/ফাঁকা due ফিল্ড থেকে নেওয়া হবে না; প্রকৃত মাসিক জমা থেকেই হিসাব হবে।
+function normalizeYear(v){ return String(v ?? '').trim(); }
+function memberPaid(m,year){
+  const target = year==='all'||!year ? null : normalizeYear(year);
+  return payments
+    .filter(p=>String(p.member_id)===String(m.id) && (target===null || normalizeYear(p.year)===target))
+    .reduce((s,p)=>s+Number(p.paid_amount||0),0);
 }
-function memberDue(m,year){return Math.max(memberRequired(m,year)-memberPaid(m,year),0)}
-function totalPaid(year){return payments.filter(p=>!year||year==='all'||Number(p.year)===Number(year)).reduce((s,p)=>s+Number(p.paid_amount||0),0)}
+function memberRequired(m,year){
+  return selectedYears(year).length * YEARLY_REQUIRED;
+}
+function memberDue(m,year){
+  const paid=memberPaid(m,year);
+  return Math.max(memberRequired(m,year)-paid,0);
+}
+function totalPaid(year){
+  const target=year==='all'||!year?null:normalizeYear(year);
+  return payments.filter(p=>target===null||normalizeYear(p.year)===target)
+    .reduce((s,p)=>s+Number(p.paid_amount||0),0);
+}
 function totalRequired(year){return members.length*selectedYears(year).length*YEARLY_REQUIRED}
 function totalDue(year){return Math.max(totalRequired(year)-totalPaid(year),0)}
 function totalExpense(year){return expenses.filter(e=>!year||year==='all'||Number(e.year)===Number(year)).reduce((s,e)=>s+Number(e.amount||0),0)}
