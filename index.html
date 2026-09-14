@@ -15,7 +15,19 @@
   </div></div>
   <button class="menu-btn" id="menuBtn" aria-label="মেইন মেনু">☰</button>
 </header>
-<nav id="mainNav" class="main-nav"><a href="#home">🏠 হোম</a><a href="#personal">👤 সদস্যদের ব্যক্তিগত হিসাব</a><a href="#members">👥 সকল সদস্যদের হিসাব</a><a href="#due">📋 বকেয়া লিস্ট</a><a href="#fund">💰 অবশিষ্ট তহবিলের খাত</a><a href="#notices">📢 নোটিশ</a><a href="#admin">🔐 এডমিন প্যানেল</a></nav>
+<div id="menuOverlay" class="menu-overlay" aria-hidden="true"></div>
+<nav id="mainNav" class="main-nav" aria-label="মেইন মেনু">
+  <button class="menu-close" id="menuClose" aria-label="মেনু বন্ধ করুন">×</button>
+  <div class="menu-logo-wrap"><img src="Al ikhwan logo.jpg" alt="আল ইখওয়ান ইসলামী সংস্থার লোগো"></div>
+  <div class="menu-heading">মেইন মেনু</div>
+  <a href="#home" data-menu-link="home"><span>⌂</span><b>হোম</b></a>
+  <a href="#personal" data-menu-link="personal"><span>👤</span><b>সদস্যদের ব্যক্তিগত হিসাব</b></a>
+  <a href="#members" data-menu-link="members"><span>👥</span><b>সকল সদস্যদের হিসাব</b></a>
+  <a href="#due" data-menu-link="due"><span>📋</span><b>বকেয়া লিস্ট</b></a>
+  <a href="#fund" data-menu-link="fund"><span>💰</span><b>অবশিষ্ট তহবিলের খাত</b></a>
+  <a href="#notices" data-menu-link="notices"><span>📢</span><b>নোটিশ</b></a>
+  <a href="#admin" data-menu-link="admin"><span>🔐</span><b>এডমিন প্যানেল</b></a>
+</nav>
 <main>
 <section id="home" class="page-section home-section">
   <div class="hero"><span class="eyebrow">আল ইখওয়ান ইসলামী সংস্থা</span><h2>হিসাবের তথ্য দেখুন</h2><p>মেইন মেনু ☰ থেকে আপনার প্রয়োজনীয় হিসাবের অপশন নির্বাচন করুন।</p></div>
