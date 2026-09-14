@@ -1,25 +1,35 @@
-# আল ইখওয়ান ইসলামী সংস্থা বাংলাদেশ — হিসাব সফটওয়্যার v8
+# আল ইখওয়ান ইসলামী সংস্থা বাংলাদেশ — হিসাব সফটওয়্যার v7
 
-- প্রতিষ্ঠা: ২০২০
-- আর্থিক হিসাব/কার্যক্রম: ২০২১ থেকে
-- মাসিক সদস্য জমা: ৫০০ টাকা
-- সবাই দেখতে পারবেন: সদস্যভিত্তিক মোট জমা ও মোট বাকি, জমার ইতিহাস, মোট লাভ, মোট খরচ, বার্ষিক ও মোট হিসাব, বর্তমান অবশিষ্ট ফান্ড।
-- শুধু Admin দেখতে পারবেন: প্রত্যেক সদস্যের ব্যক্তিগত লাভ/ডিভিডেন্ড।
-- লাভের হিসাব: ঐ বছরের সদস্যের মোট জমা ÷ ঐ বছরের মোট জমা × ঐ বছরের net profit.
+এই সংস্করণে আপনার দেওয়া `organization-accounting-2021-2026.xlsx` ফাইলের সদস্য ও মাসিক জমার হিসাব যুক্ত করার জন্য প্রস্তুত করা হয়েছে।
 
-## বর্তমান Supabase-এর সঙ্গে সামঞ্জস্য
-Frontend এখন বিদ্যমান public views ব্যবহার করে: public_member_accounts, public_yearly_summary, public_all_years_summary, public_payment_history, public_notices।
+## Excel থেকে যা যুক্ত হয়েছে
+- ৩৪ জন সদস্য
+- ২০২১, ২০২২, ২০২৩ ও ২০২৪ সালের ১২ মাসের হিসাব
+- প্রতি মাসের required amount ও paid amount
+- Excel-এর খালি মাসগুলোকে ০ টাকা জমা হিসেবে ধরা হয়েছে
+- পুরোনো Bijoy/SutonnyMJ নামগুলো Unicode Bengali-তে রূপান্তর করা হয়েছে
+- ২০২৫/২০২৬-এর কোনো worksheet/data আপনার দেওয়া workbook-এ পাওয়া যায়নি, তাই সেগুলো বানিয়ে দেওয়া হয়নি।
 
-Admin login Supabase Auth ব্যবহার করে এবং admin_users-এ role='admin' হলে Admin Panel খোলে।
+## Supabase-এ সেটআপের সঠিক ক্রম
+1. Supabase → SQL Editor → `supabase-schema.sql` চালান।
+2. তারপর একই SQL Editor-এ `seed-excel-data.sql` চালান।
+3. `supabase-config.js`-এ আপনার Project URL ও Publishable/Anon Key রাখুন। Secret/service_role key কখনো এখানে দেবেন না।
+4. GitHub Pages-এ `index.html`, `style.css`, `script.js`, `supabase-config.js`, `Al ikhwan logo.jpg` আপলোড করুন।
+5. `excel-data.json` ব্যাকআপ হিসেবে রাখতে পারেন; ওয়েবসাইট চালাতে এটি বাধ্যতামূলক নয়।
+
+## অ্যাডমিন চালু করার নিয়ম
+Supabase Authentication-এ একটি Email/Password user তৈরি করুন। এরপর SQL Editor-এ সেই Auth user-এর UUID বসিয়ে:
+
+insert into public.admin_users(user_id,role)
+values('YOUR-AUTH-USER-UUID','admin')
+on conflict(user_id) do update set role='admin';
+
+এরপর ওয়েবসাইটের Admin অংশে সেই ইমেইল/পাসওয়ার্ড দিয়ে লগইন করলে সদস্য, মাসিক জমা, নেট লাভ, খরচ, বিনিয়োগ, সম্পদ/খাত ও নোটিশ সংরক্ষণ করা যাবে।
+
+## বর্তমান ফান্ডের নিয়ম
+বর্তমান ফান্ড = মোট সদস্য জমা + খরচ বাদ দেওয়া নেট লাভ − সক্রিয় সম্পদ/খাতে রাখা টাকা − সদস্য settlement।
+
+`profits.total_profit`-এ শুধু খরচ বাদ দেওয়ার পরের **নেট লাভ** দিতে হবে, না হলে একই খরচ দুইবার বাদ যাবে।
 
 ## গুরুত্বপূর্ণ
-`profits.total_profit`-এ **খরচ বাদ দেওয়ার পরের net/distributable profit** রাখবেন। তাহলে ব্যক্তিগত লাভের হিসাব সঠিক থাকবে।
-
-`supabase-config.js`-এ শুধুমাত্র Publishable/Anon key ব্যবহার করবেন; service_role/secret key কখনো frontend-এ দেবেন না।
-
-
-## v8 সংশোধন
-- Frontend-এর ব্যবহৃত public_* views এখন schema-তে তৈরি করা হয়েছে।
-- Expense form-এর `date` column mismatch ঠিক করা হয়েছে।
-- Admin-only `admin_member_profit_accounts` view যোগ করা হয়েছে এবং সাধারণ সদস্যদের জন্য বন্ধ রাখা হয়েছে।
-- ২০২১ সাল থেকে মোট হিসাব ও বর্তমান অবশিষ্ট fund view এক করা হয়েছে।
+এই সংস্করণে মাসিক সদস্য হিসাবের বিস্তারিত দেখা যায়। কোনো সদস্যের “মাসিক হিসাব” চাপলে বছর ও মাস অনুযায়ী জমা/বকেয়া দেখা যাবে।
