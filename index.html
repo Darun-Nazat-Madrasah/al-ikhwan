@@ -1,94 +1,176 @@
 <!doctype html>
 <html lang="bn">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>আল ইখওয়ান ইসলামী সংস্থা বাংলাদেশ</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#087f4e">
+<meta name="description" content="আল ইখওয়ান ইসলামী সংস্থা বাংলাদেশের হিসাব দেখুন">
+<title>আল ইখওয়ান ইসলামী সংস্থা বাংলাদেশ — হিসাব</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<header class="topbar">
-  <div class="brand"><img src="Al ikhwan logo.jpg" alt="আল ইখওয়ান ইসলামী সংস্থার লোগো"><div>
-    <h1>আল ইখওয়ান ইসলামী সংস্থা</h1>
-    <p class="org-subtitle">হিসাব ব্যবস্থাপনা</p>
-    <p class="address">বানিপুর, কেন্দুয়া, নেত্রকোনা, মোমেনশাহী, ঢাকা</p>
-  </div></div>
-  <button class="menu-btn" id="menuBtn" aria-label="মেইন মেনু">☰</button>
-</header>
-<div id="menuOverlay" class="menu-overlay" aria-hidden="true"></div>
-<nav id="mainNav" class="main-nav" aria-label="মেইন মেনু">
-  <button class="menu-close" id="menuClose" aria-label="মেনু বন্ধ করুন">×</button>
-  <div class="menu-logo-wrap"><img src="Al ikhwan logo.jpg" alt="আল ইখওয়ান ইসলামী সংস্থার লোগো"></div>
-  <div class="menu-heading">মেইন মেনু</div>
-  <a href="#personal" data-menu-link="personal"><span>👤</span><b>সদস্যদের ব্যক্তিগত হিসাব</b></a>
-  <a href="#members" data-menu-link="members"><span>👥</span><b>সকল সদস্যদের হিসাব</b></a>
-  <a href="#due" data-menu-link="due"><span>📋</span><b>বকেয়া লিস্ট</b></a>
-  <a href="#fund" data-menu-link="fund"><span>💰</span><b>অবশিষ্ট তহবিলের খাত</b></a>
-  <a href="#notices" data-menu-link="notices"><span>📢</span><b>নোটিশ</b></a>
-  <a href="#admin" data-menu-link="admin"><span>🔐</span><b>এডমিন প্যানেল</b></a>
-</nav>
-<main>
-<section id="home" class="page-section home-section">
-  <div class="hero"><span class="eyebrow">আল ইখওয়ান ইসলামী সংস্থা</span><h2>আল ইখওয়ান ইসলামী সংস্থা বাংলাদেশ</h2><p>বানিপুর, কেন্দুয়া, নেত্রকোনা, মোমেনশাহী, ঢাকা</p></div>
-  <div class="summary-grid">
-    <article class="summary-card"><span>💰 মোট তহবিল</span><strong id="homeFund">৳ ০</strong></article>
-    <article class="summary-card"><span>📈 মোট লভ্যাংশ</span><strong id="homeProfit">৳ ০</strong></article>
-    <article class="summary-card"><span>💸 মোট খরচ</span><strong id="homeExpense">৳ ০</strong></article>
-    <article class="summary-card highlight"><span>🏦 অবশিষ্ট তহবিল</span><strong id="homeRemaining">৳ ০</strong></article>
+<header class="top-header">
+  <div class="nav container">
+    <a class="brand" href="#personal" aria-label="আল ইখওয়ান ইসলামী সংস্থা">
+      <img class="logo" src="Al ikhwan logo.jpg" alt="আল ইখওয়ান ইসলামী সংস্থার লোগো">
+      <div class="brand-text">
+        <strong>আল ইখওয়ান ইসলামী সংস্থা</strong>
+        <span>হিসাব ব্যবস্থাপনা</span>
+      </div>
+    </a>
+    <button class="menu-btn" id="menuBtn" aria-label="মেইন মেনু" aria-expanded="false">☰</button>
   </div>
-  <div class="panel"><div class="section-title"><div><span class="eyebrow">সর্বশেষ</span><h2>📢 নোটিশ</h2></div><a class="text-link" href="#notices">সব নোটিশ</a></div><div id="homeNotices" class="notice-list"><p class="loading">ডাটা লোড হচ্ছে...</p></div></div>
-</section>
-
-<section id="personal" class="page-section panel">
-  <button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button><div class="section-title"><div><span class="eyebrow">সদস্য</span><h2>👤 সদস্যদের ব্যক্তিগত হিসাব</h2></div></div>
-  <div class="filter-grid"><label>সাল নির্বাচন করুন<select id="personalYear"></select></label><label>সদস্য নির্বাচন করুন<select id="personalMember"><option value="">-- সদস্য নির্বাচন করুন --</option></select></label></div>
-  <button class="primary full" id="personalSearch">🔎 অনুসন্ধান করুন</button>
-  <div id="personalResult" class="report-area"><div class="empty-state">সাল ও সদস্য নির্বাচন করে অনুসন্ধান করুন।</div></div>
-<div class="bottom-actions"><button class="print-btn" onclick="printSection('personalResult')">🖨️ প্রিন্ট করুন</button></div></section>
-
-<section id="members" class="page-section panel">
-  <button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button><div class="section-title"><div><span class="eyebrow">বার্ষিক</span><h2>👥 সকল সদস্যদের হিসাব</h2></div><div class="actions"><button class="secondary" onclick="downloadAllMembersCSV()">⬇️ রিপোর্ট ডাউনলোড</button></div></div>
-  <div class="filter-grid one"><label>সাল নির্বাচন করুন<select id="allMembersYear"></select></label></div>
-  <button class="primary full" id="allMembersSearch">🔎 অনুসন্ধান করুন</button>
-  <div id="allMembersResult" class="report-area"><div class="empty-state">একটি বছর নির্বাচন করে অনুসন্ধান করুন।</div></div>
-<div class="bottom-actions"><button class="print-btn" onclick="printSection('allMembersResult')">🖨️ প্রিন্ট করুন</button></div></section>
-
-<section id="due" class="page-section panel">
-  <button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button><div class="section-title"><div><span class="eyebrow">বকেয়া</span><h2>📋 বকেয়া লিস্ট</h2></div><div class="actions"><button class="secondary" onclick="downloadDueCSV()">⬇️ ডাউনলোড</button></div></div>
-  <p class="muted">মাসিক নির্ধারিত জমা ৳৫০০ ধরে বছরে ৳৬,০০০ হিসাব করা হয়েছে।</p>
-  <div id="dueResult" class="report-area"><div class="loading">ডাটা লোড হচ্ছে...</div></div>
-<div class="bottom-actions"><button class="print-btn" onclick="printSection('dueResult')">🖨️ প্রিন্ট করুন</button></div></section>
-
-<section id="fund" class="page-section panel">
-  <button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button><div class="section-title"><div><span class="eyebrow">তহবিল</span><h2>💰 অবশিষ্ট তহবিলের খাত</h2></div><div class="actions"><button class="secondary" onclick="downloadAssetsCSV()">⬇️ ডাউনলোড</button></div></div>
-  <div class="summary-grid compact"><article class="summary-card"><span>মোট তহবিল</span><strong id="fundTotal">৳ ০</strong></article><article class="summary-card"><span>মোট লভ্যাংশ</span><strong id="fundProfit">৳ ০</strong></article><article class="summary-card"><span>মোট খরচ</span><strong id="fundExpense">৳ ০</strong></article><article class="summary-card highlight"><span>অবশিষ্ট তহবিল</span><strong id="fundRemaining">৳ ০</strong></article></div>
-  <div id="fundResult" class="report-area"></div>
-<div class="bottom-actions"><button class="print-btn" onclick="printSection('fundResult')">🖨️ প্রিন্ট করুন</button></div></section>
-
-<section id="notices" class="page-section panel"><button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button><div class="section-title"><div><span class="eyebrow">ঘোষণা</span><h2>📢 নোটিশ</h2></div></div><div id="noticeResult" class="notice-list"><p class="loading">ডাটা লোড হচ্ছে...</p></div><div class="bottom-actions"><button class="print-btn" onclick="printSection('noticeResult')">🖨️ প্রিন্ট করুন</button></div></section>
-
-<section id="admin" class="page-section panel">
-  <button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button><div class="section-title"><div><span class="eyebrow">নিরাপদ ব্যবস্থাপনা</span><h2>🔐 এডমিন প্যানেল</h2></div></div>
-  <div id="loginBox" class="login-card"><h3>এডমিন লগইন</h3><p class="muted">অনুমোদিত Admin ইমেইল ও পাসওয়ার্ড দিয়ে প্রবেশ করুন।</p><div class="form-grid"><input id="adminEmail" type="email" placeholder="ইমেইল"><input id="adminPassword" type="password" placeholder="পাসওয়ার্ড"></div><button class="primary" id="loginBtn">🔐 লগইন</button><div id="loginMsg" class="msg"></div></div>
-  <div id="adminBox" hidden>
-    <div class="adminbar"><div><b id="adminUser"></b><span class="admin-badge">ADMIN</span></div><button class="danger" id="logoutBtn">লগআউট</button></div>
-    <h2 class="choose-title">যুক্ত করার অপশন বাছাই করুন</h2><div class="admin-choice-grid"><button data-form="member">👤<b>নতুন সদস্য</b></button><button data-form="payment">💰<b>মাসিক জমা</b></button><button data-form="profit">📈<b>লভ্যাংশ</b></button><button data-form="expense">🧾<b>বিবিধ খরচ</b></button><button data-form="asset">🏦<b>অবশিষ্ট তহবিলের খাত</b></button><button data-form="notice">📢<b>নোটিশ</b></button></div><button class="primary add-open">যুক্ত করার বাটন</button><div class="admin-grid add-area">
-      <form id="memberForm" class="admin-form"><h3>👥 সদস্য</h3><input name="id" type="hidden"><input name="name" required placeholder="সদস্যের নাম"><input name="mobile" placeholder="মোবাইল"><div class="form-actions"><button class="primary">সদস্য সংরক্ষণ</button><button type="button" class="secondary" onclick="resetForm('memberForm')">পরিষ্কার</button></div></form>
-      <form id="paymentForm" class="admin-form"><h3>💰 মাসিক জমা</h3><input name="id" type="hidden"><select name="member_id" id="payMember" required></select><input name="year" type="number" min="2021" required placeholder="বছর"><input name="month" type="number" min="1" max="12" required placeholder="মাস (১-১২)"><input name="paid_amount" type="number" min="0" required placeholder="জমা"><div class="form-actions"><button class="primary">জমা সংরক্ষণ</button><button type="button" class="secondary" onclick="resetForm('paymentForm')">পরিষ্কার</button></div></form>
-      <form id="profitForm" class="admin-form"><h3>📈 মোট লভ্যাংশ</h3><input name="year" type="number" required placeholder="বছর"><input name="total_profit" type="number" min="0" required placeholder="মোট লভ্যাংশ"><button class="primary">লভ্যাংশ সংরক্ষণ</button></form>
-      <form id="expenseForm" class="admin-form"><h3>🧾 খরচ</h3><input name="id" type="hidden"><input name="year" type="number" required placeholder="বছর"><input name="date" type="date" required><input name="description" required placeholder="খরচের বিবরণ"><input name="amount" type="number" min="0" required placeholder="পরিমাণ"><div class="form-actions"><button class="primary">খরচ সংরক্ষণ</button><button type="button" class="secondary" onclick="resetForm('expenseForm')">পরিষ্কার</button></div></form>
-      <form id="assetForm" class="admin-form"><h3>🏦 অবশিষ্ট তহবিলের খাত</h3><input name="id" type="hidden"><input name="year" type="number" required placeholder="বছর"><input name="date" type="date" required><input name="category" required placeholder="খাত, যেমন জমি বাবদ"><input name="description" required placeholder="কার কাছে/কোথায় / বিস্তারিত"><input name="amount" type="number" min="0" required placeholder="পরিমাণ"><div class="form-actions"><button class="primary">খাত সংরক্ষণ</button><button type="button" class="secondary" onclick="resetForm('assetForm')">পরিষ্কার</button></div></form>
-      <form id="noticeForm" class="admin-form"><h3>📢 নোটিশ</h3><input name="id" type="hidden"><input name="title" required placeholder="শিরোনাম"><textarea name="description" required placeholder="বিবরণ"></textarea><div class="form-actions"><button class="primary">নোটিশ সংরক্ষণ</button><button type="button" class="secondary" onclick="resetForm('noticeForm')">পরিষ্কার</button></div></form>
+  <div class="hero">
+    <div class="container">
+      <div class="hero-small">আল ইখওয়ান ইসলামী সংস্থা</div>
+      <h1>আল ইখওয়ান ইসলামী সংস্থা বাংলাদেশ</h1>
+      <p>বানিপুর, কেন্দুয়া, নেত্রকোনা, মোমেনশাহী, ঢাকা</p>
+      <small>সংস্থার হিসাব অনলাইনে দেখুন</small>
     </div>
-    <h2 class="choose-title">ব্যবস্থাপনার অপশন বাছাই করুন</h2><div class="admin-choice-grid management"><button data-manage="members">👥<b>সদস্য ব্যবস্থাপনা</b></button><button data-manage="payments">💰<b>জমা ব্যবস্থাপনা</b></button><button data-manage="expenses">🧾<b>খরচ ব্যবস্থাপনা</b></button><button data-manage="assets">🏦<b>অবশিষ্ট তহবিলের খাত</b></button><button data-manage="notices">📢<b>নোটিশ ব্যবস্থাপনা</b></button></div><button class="primary manage-open">ব্যবস্থাপনার বাটন</button><div class="admin-data management-area"><div class="section-title"><h3>সদস্য ব্যবস্থাপনা</h3></div><div id="adminMembers" class="table-wrap"></div></div>
-    <div class="admin-data management-area"><div class="section-title"><h3>জমা ব্যবস্থাপনা</h3></div><div id="adminPayments" class="table-wrap"></div></div>
-    <div class="admin-data management-area"><div class="section-title"><h3>খরচ ব্যবস্থাপনা</h3></div><div id="adminExpenses" class="table-wrap"></div></div>
-    <div class="admin-data management-area"><div class="section-title"><h3>অবশিষ্ট তহবিলের খাত ব্যবস্থাপনা</h3></div><div id="adminAssets" class="table-wrap"></div></div>
-    <div class="admin-data management-area"><div class="section-title"><h3>নোটিশ ব্যবস্থাপনা</h3></div><div id="adminNotices" class="table-wrap"></div></div>
-    <div id="adminMsg" class="msg"></div>
   </div>
-</section>
+</header>
+
+<div class="menu-overlay" id="menuOverlay"></div>
+<nav id="mobileMenu" aria-label="মেইন মেনু">
+  <button class="menu-close" id="menuClose" aria-label="মেনু বন্ধ করুন">×</button>
+  <div class="drawer-logo"><img src="Al ikhwan logo.jpg" alt="আল ইখওয়ান ইসলামী সংস্থার লোগো"></div>
+  <div class="drawer-title">মেইন মেনু</div>
+  <a href="#personal" data-view="personal"><span>👤</span>সদস্যদের ব্যক্তিগত হিসাব</a>
+  <a href="#members" data-view="members"><span>👥</span>সকল সদস্যদের হিসাব</a>
+  <a href="#due" data-view="due"><span>📋</span>বকেয়া লিস্ট</a>
+  <a href="#fund" data-view="fund"><span>💰</span>অবশিষ্ট তহবিলের খাত</a>
+  <a href="#notices" data-view="notices"><span>📢</span>নোটিশ</a>
+  <a href="#admin" data-view="admin"><span>🔐</span>এডমিন প্যানেল</a>
+</nav>
+
+<main class="container main">
+  <section id="personal" class="result-card page-section">
+    <button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button>
+    <div class="section-title">
+      <span class="title-icon">👤</span>
+      <div><h2>সদস্যদের ব্যক্তিগত হিসাব</h2><p>সাল ও সদস্য নির্বাচন করে ব্যক্তিগত হিসাব দেখুন</p></div>
+    </div>
+    <form id="personalForm" novalidate>
+      <div class="field"><label for="personalYear">সাল নির্বাচন করুন <b>*</b></label><select id="personalYear" required></select></div>
+      <div class="field"><label for="personalMember">সদস্য নির্বাচন করুন <b>*</b></label><select id="personalMember" required><option value="">-- সদস্য নির্বাচন করুন --</option></select></div>
+      <div class="actions single-action"><button type="submit" class="btn btn-primary">অনুসন্ধান করুন</button></div>
+    </form>
+    <div id="personalMessage" class="message hidden"></div>
+    <div id="personalResult" class="report-output"><div class="empty-state">সাল ও সদস্য নির্বাচন করে অনুসন্ধান করুন।</div></div>
+    <div class="print-row"><button class="print-btn" onclick="printSection('personalResult')">🖨 প্রিন্ট / PDF</button></div>
+  </section>
+
+  <section id="members" class="result-card page-section">
+    <button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button>
+    <div class="section-title"><span class="title-icon">👥</span><div><h2>সকল সদস্যদের হিসাব</h2><p>নির্বাচিত বছরের সকল সদস্যের মাসিক হিসাব দেখুন</p></div></div>
+    <form id="membersForm" novalidate>
+      <div class="field"><label for="allMembersYear">সাল নির্বাচন করুন <b>*</b></label><select id="allMembersYear" required></select></div>
+      <div class="actions single-action"><button type="submit" class="btn btn-primary">হিসাব দেখুন</button></div>
+    </form>
+    <div id="allMembersResult" class="report-output"><div class="empty-state">একটি বছর নির্বাচন করে হিসাব দেখুন।</div></div>
+    <div class="bottom-tools"><button class="btn btn-light" onclick="downloadAllMembersCSV()">⬇ রিপোর্ট ডাউনলোড</button></div>
+    <div class="print-row"><button class="print-btn" onclick="printSection('allMembersResult')">🖨 প্রিন্ট / PDF</button></div>
+  </section>
+
+  <section id="due" class="result-card page-section">
+    <button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button>
+    <div class="section-title"><span class="title-icon">📋</span><div><h2>বকেয়া লিস্ট</h2><p>সদস্যদের জমা ও বকেয়ার বিস্তারিত তালিকা</p></div></div>
+    <div class="notice-note">মাসিক নির্ধারিত জমা ৳৫০০ ধরে হিসাব করা হয়েছে।</div>
+    <div id="dueResult" class="report-output"><div class="loading">ডাটা লোড হচ্ছে...</div></div>
+    <div class="bottom-tools"><button class="btn btn-light" onclick="downloadDueCSV()">⬇ বকেয়া লিস্ট ডাউনলোড</button></div>
+    <div class="print-row"><button class="print-btn" onclick="printSection('dueResult')">🖨 প্রিন্ট / PDF</button></div>
+  </section>
+
+  <section id="fund" class="result-card page-section">
+    <button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button>
+    <div class="section-title"><span class="title-icon">💰</span><div><h2>অবশিষ্ট তহবিলের খাত</h2><p>তহবিল, লভ্যাংশ, খরচ ও খাতে রাখা অর্থের হিসাব</p></div></div>
+    <div class="summary-grid compact">
+      <article><span>মোট তহবিল</span><strong id="fundTotal">৳ ০</strong></article>
+      <article><span>মোট লভ্যাংশ</span><strong id="fundProfit">৳ ০</strong></article>
+      <article><span>মোট খরচ</span><strong id="fundExpense">৳ ০</strong></article>
+      <article class="highlight"><span>অবশিষ্ট তহবিল</span><strong id="fundRemaining">৳ ০</strong></article>
+    </div>
+    <div id="fundResult" class="report-output"></div>
+    <div class="bottom-tools"><button class="btn btn-light" onclick="downloadAssetsCSV()">⬇ খাতের তালিকা ডাউনলোড</button></div>
+    <div class="print-row"><button class="print-btn" onclick="printSection('fundResult')">🖨 প্রিন্ট / PDF</button></div>
+  </section>
+
+  <section id="notices" class="result-card page-section">
+    <button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button>
+    <div class="section-title"><span class="title-icon">📢</span><div><h2>নোটিশ</h2><p>সংস্থার প্রকাশিত ঘোষণা ও নোটিশ</p></div></div>
+    <div id="noticeResult" class="notice-list"><div class="loading">ডাটা লোড হচ্ছে...</div></div>
+    <div class="print-row"><button class="print-btn" onclick="printSection('noticeResult')">🖨 প্রিন্ট / PDF</button></div>
+  </section>
+
+  <section id="admin" class="result-card page-section">
+    <button class="back-btn" onclick="openMainMenu()">← মেইন মেনু</button>
+    <div class="section-title"><span class="title-icon">🔐</span><div><h2>এডমিন প্যানেল</h2><p>শুধুমাত্র অনুমোদিত অ্যাডমিনের জন্য</p></div></div>
+
+    <div id="loginBox" class="login-card">
+      <h3>এডমিন লগইন</h3>
+      <p class="muted">অনুমোদিত ইমেইল ও পাসওয়ার্ড দিয়ে প্রবেশ করুন।</p>
+      <div class="login-fields"><input id="adminEmail" type="email" autocomplete="username" placeholder="ইমেইল"><input id="adminPassword" type="password" autocomplete="current-password" placeholder="পাসওয়ার্ড"></div>
+      <button class="btn btn-primary full" id="loginBtn">🔐 লগইন</button>
+      <div id="loginMsg" class="message"></div>
+    </div>
+
+    <div id="adminBox" hidden>
+      <div class="adminbar"><div><b id="adminUser"></b><span class="admin-badge">ADMIN</span></div><button class="btn danger" id="logoutBtn">লগআউট</button></div>
+
+      <h2 class="choose-title">যুক্ত করার অপশন বাছাই করুন</h2>
+      <div class="admin-choice-grid add-choice">
+        <button type="button" data-form="member">👤<b>নতুন সদস্য</b></button>
+        <button type="button" data-form="payment">💰<b>মাসিক জমা</b></button>
+        <button type="button" data-form="profit">📈<b>লভ্যাংশ</b></button>
+        <button type="button" data-form="expense">🧾<b>বিবিধ খরচ</b></button>
+        <button type="button" data-form="asset">🏦<b>অবশিষ্ট তহবিলের খাত</b></button>
+        <button type="button" data-form="notice">📢<b>নোটিশ</b></button>
+      </div>
+      <button type="button" class="btn btn-primary admin-open" id="addOpen">যুক্ত করার বাটন</button>
+
+      <div id="addArea" class="admin-form-area">
+        <form id="memberForm" class="admin-form"><h3>👤 নতুন সদস্য</h3><input name="id" type="hidden"><input name="name" required placeholder="সদস্যের নাম"><input name="mobile" placeholder="মোবাইল নম্বর"><div class="form-actions"><button class="btn btn-primary">সদস্য সংরক্ষণ</button><button type="button" class="btn btn-light" onclick="resetForm('memberForm')">পরিষ্কার</button></div></form>
+
+        <form id="paymentForm" class="admin-form"><h3>💰 মাসিক জমা</h3><input name="id" type="hidden"><select name="member_id" id="payMember" required></select><input name="year" type="number" min="2021" max="2100" required placeholder="বছর"><select name="month" required><option value="">-- মাস নির্বাচন করুন --</option><option value="1">জানুয়ারি</option><option value="2">ফেব্রুয়ারি</option><option value="3">মার্চ</option><option value="4">এপ্রিল</option><option value="5">মে</option><option value="6">জুন</option><option value="7">জুলাই</option><option value="8">আগস্ট</option><option value="9">সেপ্টেম্বর</option><option value="10">অক্টোবর</option><option value="11">নভেম্বর</option><option value="12">ডিসেম্বর</option></select><input name="paid_amount" type="number" min="0" required placeholder="জমার পরিমাণ"><div class="form-actions"><button class="btn btn-primary">জমা সংরক্ষণ</button><button type="button" class="btn btn-light" onclick="resetForm('paymentForm')">পরিষ্কার</button></div></form>
+
+        <form id="profitForm" class="admin-form"><h3>📈 লভ্যাংশ</h3><input name="year" type="number" min="2021" max="2100" required placeholder="বছর"><input name="total_profit" type="number" min="0" required placeholder="মোট লভ্যাংশ"><div class="form-actions"><button class="btn btn-primary">লভ্যাংশ সংরক্ষণ</button><button type="button" class="btn btn-light" onclick="resetForm('profitForm')">পরিষ্কার</button></div></form>
+
+        <form id="expenseForm" class="admin-form"><h3>🧾 বিবিধ খরচ</h3><input name="id" type="hidden"><input name="year" type="number" min="2021" max="2100" required placeholder="বছর"><input name="date" type="date" required><input name="description" required placeholder="খরচের বিবরণ"><input name="amount" type="number" min="0" required placeholder="পরিমাণ"><div class="form-actions"><button class="btn btn-primary">খরচ সংরক্ষণ</button><button type="button" class="btn btn-light" onclick="resetForm('expenseForm')">পরিষ্কার</button></div></form>
+
+        <form id="assetForm" class="admin-form"><h3>🏦 অবশিষ্ট তহবিলের খাত</h3><input name="id" type="hidden"><input name="year" type="number" min="2021" max="2100" required placeholder="বছর"><input name="date" type="date" required><input name="category" required placeholder="খাত, যেমন জমি বাবদ"><input name="description" required placeholder="কার কাছে/কোথায় / বিস্তারিত"><input name="amount" type="number" min="0" required placeholder="পরিমাণ"><div class="form-actions"><button class="btn btn-primary">খাত সংরক্ষণ</button><button type="button" class="btn btn-light" onclick="resetForm('assetForm')">পরিষ্কার</button></div></form>
+
+        <form id="noticeForm" class="admin-form"><h3>📢 নোটিশ</h3><input name="id" type="hidden"><input name="title" required placeholder="নোটিশের শিরোনাম"><textarea name="description" required placeholder="নোটিশের বিবরণ"></textarea><div class="form-actions"><button class="btn btn-primary">নোটিশ সংরক্ষণ</button><button type="button" class="btn btn-light" onclick="resetForm('noticeForm')">পরিষ্কার</button></div></form>
+      </div>
+
+      <h2 class="choose-title">ব্যবস্থাপনার অপশন বাছাই করুন</h2>
+      <div class="admin-choice-grid manage-choice">
+        <button type="button" data-manage="members">👥<b>সদস্য ব্যবস্থাপনা</b></button>
+        <button type="button" data-manage="payments">💰<b>জমা ব্যবস্থাপনা</b></button>
+        <button type="button" data-manage="expenses">🧾<b>খরচ ব্যবস্থাপনা</b></button>
+        <button type="button" data-manage="assets">🏦<b>অবশিষ্ট তহবিলের খাত</b></button>
+        <button type="button" data-manage="notices">📢<b>নোটিশ ব্যবস্থাপনা</b></button>
+      </div>
+      <button type="button" class="btn btn-primary admin-open" id="manageOpen">ব্যবস্থাপনার বাটন</button>
+
+      <div id="managementArea" class="management-area">
+        <div id="manageMembers" class="admin-data"><h3>👥 সদস্য ব্যবস্থাপনা</h3><div id="adminMembers" class="table-wrap"></div></div>
+        <div id="managePayments" class="admin-data"><h3>💰 জমা ব্যবস্থাপনা</h3><div class="management-filter"><label>বছর নির্বাচন করুন<select id="paymentManageYear"></select></label></div><div id="adminPayments" class="table-wrap"></div></div>
+        <div id="manageExpenses" class="admin-data"><h3>🧾 খরচ ব্যবস্থাপনা</h3><div id="adminExpenses" class="table-wrap"></div></div>
+        <div id="manageAssets" class="admin-data"><h3>🏦 অবশিষ্ট তহবিলের খাত ব্যবস্থাপনা</h3><div id="adminAssets" class="table-wrap"></div></div>
+        <div id="manageNotices" class="admin-data"><h3>📢 নোটিশ ব্যবস্থাপনা</h3><div id="adminNotices" class="table-wrap"></div></div>
+      </div>
+      <div id="adminMsg" class="message"></div>
+    </div>
+  </section>
+
+  <section id="home" class="hidden-home" aria-hidden="true"></section>
 </main>
-<footer>© আল ইখওয়ান ইসলামী সংস্থা বাংলাদেশ</footer>
-<script src="supabase-config.js"></script><script src="script.js"></script>
-</body></html>
+
+<footer>
+  <div class="container">© <span id="footerYear"></span> আল ইখওয়ান ইসলামী সংস্থা বাংলাদেশ<div class="footer-sub">সকল অধিকার সংরক্ষিত</div></div>
+</footer>
+<script src="supabase-config.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
