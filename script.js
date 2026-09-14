@@ -148,7 +148,7 @@ function renderFund(){
 }
 function renderNotices(){
   const html=notices.map(n=>`<article class="notice"><h3>${esc(n.title)}</h3><p>${esc(n.description)}</p><small>${esc(n.publish_date||'')}</small></article>`).join('');
-  q('noticeResult').innerHTML=(html||'<div class="empty-state">কোনো প্রকাশিত নোটিশ নেই।</div>')+printButton('noticeResult');
+  q('noticeResult').innerHTML=html||'<div class="empty-state">কোনো প্রকাশিত নোটিশ নেই।</div>';
 }
 function showMessage(text,ok=false,target='adminMsg'){const el=q(target);if(!el)return;el.textContent=text;el.className='message '+(ok?'success':'error')}
 function resetForm(id){const f=q(id);if(!f)return;f.reset();const h=f.querySelector('[name=id]');if(h)h.value=''}
