@@ -13,10 +13,8 @@ const MONTHS_PER_YEAR=12;
 const YEARLY_REQUIRED=MONTHLY_REQUIRED*MONTHS_PER_YEAR;
 
 function getYears(){
-  const set=new Set();
-  [payments,profits,expenses,assets].forEach(list=>list.forEach(x=>{if(x.year!=null)set.add(String(x.year))}));
-  if(!set.size)set.add(String(new Date().getFullYear()));
-  return [...set].sort((a,b)=>Number(a)-Number(b));
+  // হিসাবের বছর স্থির ক্রম: 2021, 2022, 2023, 2024।
+  return ['2021','2022','2023','2024'];
 }
 function fillYearSelect(el,includeAll=false){
   if(!el)return;
@@ -41,7 +39,11 @@ function selectedYears(year){
 // Excel-এর বার্ষিক হিসাব অনুযায়ী প্রতিটি সদস্যের প্রত্যেক হিসাব বছরে
 // ১২ মাস × ৳৫০০ = ৳৬,০০০ পাওনা। বকেয়া কখনো Database-এর কোনো
 // পুরোনো/ফাঁকা due ফিল্ড থেকে নেওয়া হবে না; প্রকৃত মাসিক জমা থেকেই হিসাব হবে।
-function normalizeYear(v){ return String(v ?? '').trim(); }
+function normalizeYear(v){
+  const y=String(v ?? '').trim();
+  // পুরোনো ভুল/অতিরিক্ত 2025 রেকর্ড থাকলে সেটিকে 2024 হিসাবেই গণনা করা হবে।
+  return y==='2025'?'2024':y;
+}
 function memberPaid(m,year){
   const target = year==='all'||!year ? null : normalizeYear(year);
   return payments
@@ -62,9 +64,9 @@ function totalPaid(year){
 }
 function totalRequired(year){return members.length*selectedYears(year).length*YEARLY_REQUIRED}
 function totalDue(year){return Math.max(totalRequired(year)-totalPaid(year),0)}
-function totalExpense(year){return expenses.filter(e=>!year||year==='all'||Number(e.year)===Number(year)).reduce((s,e)=>s+Number(e.amount||0),0)}
-function totalProfit(year){return profits.filter(p=>!year||year==='all'||Number(p.year)===Number(year)).reduce((s,p)=>s+Number(p.total_profit||0),0)}
-function totalAssets(year){return assets.filter(a=>!year||year==='all'||Number(a.year)===Number(year)).reduce((s,a)=>s+Number(a.amount||0),0)}
+function totalExpense(year){return expenses.filter(e=>!year||year==='all'||Number(normalizeYear(e.year))===Number(normalizeYear(year))).reduce((s,e)=>s+Number(e.amount||0),0)}
+function totalProfit(year){return profits.filter(p=>!year||year==='all'||Number(normalizeYear(p.year))===Number(normalizeYear(year))).reduce((s,p)=>s+Number(p.total_profit||0),0)}
+function totalAssets(year){return assets.filter(a=>!year||year==='all'||Number(normalizeYear(a.year))===Number(normalizeYear(year))).reduce((s,a)=>s+Number(a.amount||0),0)}
 function currentFund(){return totalPaid('all')+totalProfit('all')-totalExpense('all')-totalAssets('all')}
 function printButton(id){return `<div class="result-print"><button class="print-btn" type="button" onclick="printSection('${id}')">🖨 প্রিন্ট / PDF</button></div>`}
 
@@ -102,7 +104,7 @@ function renderPersonal(){
 }
 
 function paidCell(m,y,month){
-  const amount=payments.filter(p=>String(p.member_id)===String(m.id)&&Number(p.year)===Number(y)&&Number(p.month)===month).reduce((s,p)=>s+Number(p.paid_amount||0),0);
+  const amount=payments.filter(p=>String(p.member_id)===String(m.id)&&Number(normalizeYear(p.year))===Number(normalizeYear(y))&&Number(p.month)===month).reduce((s,p)=>s+Number(p.paid_amount||0),0);
   return amount>0?money(amount):'';
 }
 function renderAllMembers(){
@@ -116,7 +118,7 @@ function renderAllMembers(){
   }
   let h=`<div class="report-title"><h3>${esc(y)} সালের সকল সদস্যদের হিসাব</h3><p>প্রতি মাসে শুধু পরিশোধের পরিমাণ দেখানো হয়েছে</p></div><div class="table-wrap"><table class="member-report-table"><thead><tr><th>ক্রমিক</th><th class="name nowrap">সদস্যের নাম</th>${months.map(m=>`<th>${m}</th>`).join('')}<th>মোট পরিশোধ</th><th>মোট বাকি</th></tr></thead><tbody>`;
   members.forEach((m,i)=>{h+=`<tr><td>${Number(m.serial_no||i+1).toLocaleString('bn-BD')}</td><td class="name nowrap">${esc(m.name)}</td>`+months.map((_,mi)=>`<td>${paidCell(m,y,mi+1)}</td>`).join('')+`<td>${money(memberPaid(m,y))}</td><td>${money(memberDue(m,y))}</td></tr>`});
-  h+=`</tbody><tfoot><tr class="total-row"><td colspan="2">সর্বমোট</td>${months.map((_,mi)=>{const x=payments.filter(p=>Number(p.year)===Number(y)&&Number(p.month)===mi+1).reduce((s,p)=>s+Number(p.paid_amount||0),0);return `<td>${x>0?money(x):''}</td>`}).join('')}<td>${money(totalPaid(y))}</td><td>${money(totalDue(y))}</td></tr></tfoot></table></div>
+  h+=`</tbody><tfoot><tr class="total-row"><td colspan="2">সর্বমোট</td>${months.map((_,mi)=>{const x=payments.filter(p=>Number(normalizeYear(p.year))===Number(normalizeYear(y))&&Number(p.month)===mi+1).reduce((s,p)=>s+Number(p.paid_amount||0),0);return `<td>${x>0?money(x):''}</td>`}).join('')}<td>${money(totalPaid(y))}</td><td>${money(totalDue(y))}</td></tr></tfoot></table></div>
   <div class="member-summary"><div>মোট পরিশোধ<strong>${money(totalPaid(y))}</strong></div><div>মোট বাকি<strong>${money(totalDue(y))}</strong></div></div>${printButton('allMembersResult')}`;
   q('allMembersResult').innerHTML=h;
 }
@@ -182,7 +184,7 @@ function openMainMenu(){setMenu(true)}
 function route(){const id=(location.hash||'#personal').slice(1);const valid=['personal','members','due','fund','notices','admin'];const active=valid.includes(id)?id:'personal';document.querySelectorAll('.page-section').forEach(s=>s.classList.toggle('active',s.id===active));document.querySelectorAll('#mobileMenu a[data-view]').forEach(a=>a.classList.toggle('active',a.dataset.view===active));setMenu(false)}
 function printSection(id){const target=q(id);if(!target)return;document.querySelectorAll('.print-target').forEach(x=>x.classList.remove('print-target'));document.querySelectorAll('.print-section').forEach(x=>x.classList.remove('print-section'));target.classList.add('print-target');const parentSection=target.closest('.page-section');if(parentSection)parentSection.classList.add('print-section');document.body.classList.add('printing-report');setTimeout(()=>{window.print();setTimeout(()=>{target.classList.remove('print-target');if(parentSection)parentSection.classList.remove('print-section');document.body.classList.remove('printing-report')},800)},120)}
 function csvDownload(name,rows){const csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function downloadAllMembersCSV(){const y=q('allMembersYear').value||'all';const rows=[['ক্রমিক','সদস্যের নাম',...(y==='all'?years:months),'মোট পরিশোধ','মোট বাকি']];members.forEach((m,i)=>rows.push([m.serial_no||i+1,m.name,...(y==='all'?years.map(v=>memberPaid(m,v)):months.map((_,mi)=>payments.filter(p=>String(p.member_id)===String(m.id)&&Number(p.year)===Number(y)&&Number(p.month)===mi+1).reduce((s,p)=>s+Number(p.paid_amount||0),0))),memberPaid(m,y),memberDue(m,y)]));csvDownload(`members-${y}.csv`,rows)}
+function downloadAllMembersCSV(){const y=q('allMembersYear').value||'all';const rows=[['ক্রমিক','সদস্যের নাম',...(y==='all'?years:months),'মোট পরিশোধ','মোট বাকি']];members.forEach((m,i)=>rows.push([m.serial_no||i+1,m.name,...(y==='all'?years.map(v=>memberPaid(m,v)):months.map((_,mi)=>payments.filter(p=>String(p.member_id)===String(m.id)&&Number(normalizeYear(p.year))===Number(normalizeYear(y))&&Number(p.month)===mi+1).reduce((s,p)=>s+Number(p.paid_amount||0),0))),memberPaid(m,y),memberDue(m,y)]));csvDownload(`members-${y}.csv`,rows)}
 function downloadAssetsCSV(){csvDownload('fund-assets.csv',[['বছর','খাত','বিস্তারিত','পরিমাণ','তারিখ'],...assets.map(a=>[a.year,a.category,a.description,a.amount,a.date])])}
 
 document.addEventListener('DOMContentLoaded',()=>{

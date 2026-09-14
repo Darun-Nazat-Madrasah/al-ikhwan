@@ -175,6 +175,7 @@ footer{background:#076f45;color:#fff;text-align:center;padding:24px 0;font-size:
 @media(max-width:520px){.compact-summary{grid-template-columns:1fr}.admin-select-row select{height:70px;font-size:19px}}
 
 @media print{
+  @page{size:auto;margin:12mm}
   body{background:#fff!important}
   body.printing-report *{visibility:hidden!important}
   body.printing-report .print-section{display:block!important;visibility:visible!important;position:static!important;width:100%!important;margin:0!important;padding:0!important;background:#fff!important;box-shadow:none!important;border:0!important}
