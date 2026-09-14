@@ -6,6 +6,11 @@ const money=n=>`৳ ${Number(n||0).toLocaleString('bn-BD')}`;
 const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const q=id=>document.getElementById(id);
 let members=[],payments=[],profits=[],expenses=[],assets=[],notices=[],adminUser=null,years=[];
+// বার্ষিক হিসাবের মূল নিয়ম: প্রতি সদস্যের জন্য বছরে ১২ মাস × ৳৫০০ = ৳৬,০০০।
+// বকেয়া সবসময় বার্ষিক মোট পাওনা থেকে প্রকৃত পরিশোধ বাদ দিয়ে অটোমেটিক গণনা হবে।
+const MONTHLY_REQUIRED=500;
+const MONTHS_PER_YEAR=12;
+const YEARLY_REQUIRED=MONTHLY_REQUIRED*MONTHS_PER_YEAR;
 
 function getYears(){
   const set=new Set();
@@ -32,12 +37,16 @@ function fillMemberSelectors(){
 function memberPaid(m,year){
   return payments.filter(p=>String(p.member_id)===String(m.id)&&(!year||year==='all'||Number(p.year)===Number(year))).reduce((s,p)=>s+Number(p.paid_amount||0),0);
 }
+function selectedYears(year){
+  if(year==='all'||!year) return years;
+  return [String(year)];
+}
 function memberRequired(m,year){
-  return payments.filter(p=>String(p.member_id)===String(m.id)&&(!year||year==='all'||Number(p.year)===Number(year))).reduce((s,p)=>s+Number(p.required_amount??500),0);
+  return selectedYears(year).length*YEARLY_REQUIRED;
 }
 function memberDue(m,year){return Math.max(memberRequired(m,year)-memberPaid(m,year),0)}
 function totalPaid(year){return payments.filter(p=>!year||year==='all'||Number(p.year)===Number(year)).reduce((s,p)=>s+Number(p.paid_amount||0),0)}
-function totalRequired(year){return payments.filter(p=>!year||year==='all'||Number(p.year)===Number(year)).reduce((s,p)=>s+Number(p.required_amount??500),0)}
+function totalRequired(year){return members.length*selectedYears(year).length*YEARLY_REQUIRED}
 function totalDue(year){return Math.max(totalRequired(year)-totalPaid(year),0)}
 function totalExpense(year){return expenses.filter(e=>!year||year==='all'||Number(e.year)===Number(year)).reduce((s,e)=>s+Number(e.amount||0),0)}
 function totalProfit(year){return profits.filter(p=>!year||year==='all'||Number(p.year)===Number(year)).reduce((s,p)=>s+Number(p.total_profit||0),0)}
@@ -129,7 +138,7 @@ function showMessage(text,ok=false,target='adminMsg'){const el=q(target);if(!el)
 function resetForm(id){const f=q(id);if(!f)return;f.reset();const h=f.querySelector('[name=id]');if(h)h.value=''}
 async function saveOrUpdate(table,form,make){const d=Object.fromEntries(new FormData(form).entries()),id=d.id,row=make(d);const res=id?await sb.from(table).update(row).eq('id',id):await sb.from(table).insert(row);if(res.error){showMessage(res.error.message,false);return false}showMessage('সফলভাবে সংরক্ষণ হয়েছে ✓',true);resetForm(form.id);await load();return true}
 async function saveMember(){await saveOrUpdate('members',q('memberForm'),d=>({name:d.name.trim(),mobile:d.mobile||null,status:'active'}))}
-async function savePayment(){const f=q('paymentForm'),d=Object.fromEntries(new FormData(f).entries());const row={member_id:d.member_id,year:+d.year,month:+d.month,required_amount:500,paid_amount:+d.paid_amount,payment_date:null};const res=d.id?await sb.from('payments').update(row).eq('id',d.id):await sb.from('payments').upsert(row,{onConflict:'member_id,year,month'});if(res.error){showMessage(res.error.message,false);return}showMessage('মাসিক জমা সংরক্ষণ হয়েছে ✓',true);resetForm('paymentForm');await load()}
+async function savePayment(){const f=q('paymentForm'),d=Object.fromEntries(new FormData(f).entries());const row={member_id:d.member_id,year:+d.year,month:+d.month,required_amount:MONTHLY_REQUIRED,paid_amount:+d.paid_amount,payment_date:null};const res=d.id?await sb.from('payments').update(row).eq('id',d.id):await sb.from('payments').upsert(row,{onConflict:'member_id,year,month'});if(res.error){showMessage(res.error.message,false);return}showMessage('মাসিক জমা সংরক্ষণ হয়েছে ✓',true);resetForm('paymentForm');await load()}
 async function saveProfit(){const d=Object.fromEntries(new FormData(q('profitForm')).entries());const {error}=await sb.from('profits').upsert({year:+d.year,total_profit:+d.total_profit},{onConflict:'year'});if(error){showMessage(error.message,false);return}showMessage('লভ্যাংশ সংরক্ষণ হয়েছে ✓',true);resetForm('profitForm');await load()}
 async function saveExpense(){await saveOrUpdate('expenses',q('expenseForm'),d=>({year:+d.year,date:d.date,description:d.description.trim(),amount:+d.amount}))}
 async function saveAsset(){await saveOrUpdate('assets',q('assetForm'),d=>({year:+d.year,date:d.date,category:d.category.trim(),description:d.description.trim(),amount:+d.amount,status:'active'}))}
