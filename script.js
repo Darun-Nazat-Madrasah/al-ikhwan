@@ -16,7 +16,7 @@ function getYears(){
   const set=new Set();
   [payments,profits,expenses,assets].forEach(list=>list.forEach(x=>{if(x.year!=null)set.add(String(x.year))}));
   if(!set.size)set.add(String(new Date().getFullYear()));
-  return [...set].sort((a,b)=>Number(b)-Number(a));
+  return [...set].sort((a,b)=>Number(a)-Number(b));
 }
 function fillYearSelect(el,includeAll=false){
   if(!el)return;
@@ -180,7 +180,7 @@ function openManagement(name){document.querySelectorAll('.admin-data').forEach(x
 function setMenu(open){const menu=q('mobileMenu'),overlay=q('menuOverlay'),btn=q('menuBtn');menu.classList.toggle('open',open);overlay.classList.toggle('show',open);btn.setAttribute('aria-expanded',String(open));document.body.classList.toggle('menu-open',open)}
 function openMainMenu(){setMenu(true)}
 function route(){const id=(location.hash||'#personal').slice(1);const valid=['personal','members','due','fund','notices','admin'];const active=valid.includes(id)?id:'personal';document.querySelectorAll('.page-section').forEach(s=>s.classList.toggle('active',s.id===active));document.querySelectorAll('#mobileMenu a[data-view]').forEach(a=>a.classList.toggle('active',a.dataset.view===active));setMenu(false)}
-function printSection(id){const target=q(id);if(!target)return;document.querySelectorAll('.print-target').forEach(x=>x.classList.remove('print-target'));target.classList.add('print-target');document.body.classList.add('printing-report');setTimeout(()=>{window.print();setTimeout(()=>{target.classList.remove('print-target');document.body.classList.remove('printing-report')},600)},80)}
+function printSection(id){const target=q(id);if(!target)return;document.querySelectorAll('.print-target').forEach(x=>x.classList.remove('print-target'));document.querySelectorAll('.print-section').forEach(x=>x.classList.remove('print-section'));target.classList.add('print-target');const parentSection=target.closest('.page-section');if(parentSection)parentSection.classList.add('print-section');document.body.classList.add('printing-report');setTimeout(()=>{window.print();setTimeout(()=>{target.classList.remove('print-target');if(parentSection)parentSection.classList.remove('print-section');document.body.classList.remove('printing-report')},800)},120)}
 function csvDownload(name,rows){const csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function downloadAllMembersCSV(){const y=q('allMembersYear').value||'all';const rows=[['ক্রমিক','সদস্যের নাম',...(y==='all'?years:months),'মোট পরিশোধ','মোট বাকি']];members.forEach((m,i)=>rows.push([m.serial_no||i+1,m.name,...(y==='all'?years.map(v=>memberPaid(m,v)):months.map((_,mi)=>payments.filter(p=>String(p.member_id)===String(m.id)&&Number(p.year)===Number(y)&&Number(p.month)===mi+1).reduce((s,p)=>s+Number(p.paid_amount||0),0))),memberPaid(m,y),memberDue(m,y)]));csvDownload(`members-${y}.csv`,rows)}
 function downloadAssetsCSV(){csvDownload('fund-assets.csv',[['বছর','খাত','বিস্তারিত','পরিমাণ','তারিখ'],...assets.map(a=>[a.year,a.category,a.description,a.amount,a.date])])}

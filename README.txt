@@ -35,9 +35,3 @@ FINAL v4 হিসাব সংশোধন:
 - বকেয়া = 6000 - ঐ বছরে প্রকৃত মাসিক জমা।
 - bokea শিট থেকে বকেয়া নেওয়া হয় না।
 - সকল বছর নির্বাচনে নির্বাচিত সব হিসাব বছরের বকেয়া যোগ হয়।
-
-FINAL VERIFICATION
-- JavaScript syntax checked successfully with Node.js --check.
-- Excel 2021-2024 monthly cells were independently summed for verification.
-- Annual due is calculated from monthly payments, not from the bokea sheet or stored due columns.
-- Example: 2023 annual payment 2500 => due 3500.
