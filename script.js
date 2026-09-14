@@ -1,78 +1,92 @@
 const sb=(window.supabase&&window.SUPABASE_URL&&window.SUPABASE_ANON_KEY)?window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY):null;
-const money=n=>`৳ ${Number(n||0).toLocaleString('bn-BD')}`;
-const months=['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
-let members=[],payments=[],assets=[],annual=[],adminUser=null;
-
+const years=[2021,2022,2023,2024],months=['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+const money=n=>`৳ ${Number(n||0).toLocaleString('bn-BD')}`; const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+let members=[],payments=[],profits=[],expenses=[],assets=[],notices=[],adminUser=null;
+const q=id=>document.getElementById(id);
+function yearOptions(includeAll=true){return (includeAll?'<option value="all">সকল বছর</option>':'')+years.map(y=>`<option value="${y}">${y}</option>`).join('')}
+function fillYearSelectors(){q('personalYear').innerHTML=yearOptions();q('allMembersYear').innerHTML=yearOptions();}
+function resetForm(id){q(id)?.reset();const h=q(id)?.querySelector('[name=id]');if(h)h.value='';}
+function sum(a,k){return a.reduce((s,x)=>s+Number(x[k]||0),0)}
+function requiredFor(year,month){return payments.filter(p=>Number(p.year)===Number(year)&&Number(p.month)===Number(month)).reduce((s,p)=>s+Number(p.required_amount||500),0)}
 async function load(){
- if(!sb){setMsg('Supabase config পাওয়া যায়নি।');return;}
- const [m,p,a,y,n]=await Promise.all([
-   sb.from('member_public_summary').select('*').order('name'),
-   sb.from('payments').select('*').order('year').order('month'),
-   sb.from('assets').select('*').eq('status','active').order('date',{ascending:false}),
-   sb.from('annual_summary').select('*').order('year'),
-   sb.from('notices').select('*').eq('status','published').order('publish_date',{ascending:false})
+ if(!sb){q('homeNotices').innerHTML='<p class="empty-state">Supabase config পাওয়া যায়নি।</p>';return}
+ const [m,p,pr,e,a,n]=await Promise.all([
+  sb.from('members').select('id,name,mobile,status,serial_no').eq('status','active').order('serial_no',{ascending:true,nullsFirst:false}).order('created_at'),
+  sb.from('payments').select('*').order('year').order('month'),
+  sb.from('profits').select('*').order('year'),
+  sb.from('expenses').select('*').order('date',{ascending:false}),
+  sb.from('assets').select('*').eq('status','active').order('date',{ascending:false}),
+  sb.from('notices').select('*').eq('status','published').order('publish_date',{ascending:false})
  ]);
- if(m.error||p.error||a.error||y.error){setMsg('ডাটাবেস/SQL সেটআপ সম্পূর্ণ হয়নি।');return;}
- members=m.data||[];payments=p.data||[];assets=a.data||[];annual=y.data||[];
- renderMembers();renderAssets();renderYears();renderYearSelect();renderNotices(n?.data||[]);
- const {data:fund}=await sb.from('current_fund_summary').select('*').maybeSingle();
- document.querySelector('#activeMembers').textContent=Number(members.length).toLocaleString('bn-BD');
- document.querySelector('#totalDeposit').textContent=money(members.reduce((s,x)=>s+Number(x.total_deposit),0));
- document.querySelector('#totalDue').textContent=money(members.reduce((s,x)=>s+Number(x.due),0));
- document.querySelector('#totalProfit').textContent=money(annual.reduce((s,x)=>s+Number(x.total_profit),0));
- document.querySelector('#assetTotal').textContent=money(assets.reduce((s,x)=>s+Number(x.amount),0));
- document.querySelector('#currentFund').textContent=money(fund?.current_fund||0);
- showYear('all');
+ if(m.error||p.error||pr.error||e.error||a.error||n.error){console.error(m.error,p.error,pr.error,e.error,a.error,n.error);q('homeNotices').innerHTML='<p class="empty-state">ডাটা লোড করতে সমস্যা হয়েছে।</p>';return}
+ members=m.data||[];payments=p.data||[];profits=pr.data||[];expenses=e.data||[];assets=a.data||[];notices=n.data||[];
+ fillYearSelectors(); fillMemberSelectors(); renderHome(); renderPersonalDueList(); renderFund(); renderNotices(); renderAllMembers(); checkAdmin();
 }
-
-function renderMembers(){
- const q=(document.querySelector('#search').value||'').toLowerCase();
- const list=members.filter(x=>x.name.toLowerCase().includes(q));
- document.querySelector('#memberRows').innerHTML=list.map((x,i)=>`<tr><td>${i+1}</td><td>${x.name}</td><td>${money(x.total_deposit)}</td><td>${money(x.due)}</td><td>সক্রিয়</td><td><button class="small" onclick="showMember('${x.id}')">মাসিক হিসাব</button></td></tr>`).join('')||'<tr><td colspan="6">কোনো সদস্য পাওয়া যায়নি</td></tr>';
-}
-
-function showMember(id){
- const m=members.find(x=>x.id===id); if(!m)return;
- const rows=payments.filter(x=>x.member_id===id).sort((a,b)=>a.year-b.year||a.month-b.month);
- const years=[...new Set(rows.map(x=>x.year))];
- let h=`<div class="detail-head"><b>${m.name}</b><span>মোট জমা: ${money(m.total_deposit)} • বকেয়া: ${money(m.due)}</span></div>`;
- for(const y of years){
-   h+=`<h3>${y} সাল</h3><div class="monthgrid">`;
-   rows.filter(x=>x.year===y).forEach(x=>{const due=Math.max(Number(x.required_amount)-Number(x.paid_amount),0);h+=`<div><b>${months[x.month-1]}</b><span>জমা ${money(x.paid_amount)}</span><small>${due?`বকেয়া ${money(due)}`:'পরিশোধিত'}</small></div>`});
-   h+=`</div>`;
+function fillMemberSelectors(){const opts=members.map((m,i)=>`<option value="${m.id}">${Number(m.serial_no||i+1).toLocaleString('bn-BD')}. ${esc(m.name)}</option>`).join('');q('personalMember').innerHTML='<option value="">-- সদস্য নির্বাচন করুন --</option>'+opts;q('payMember').innerHTML='<option value="">-- সদস্য নির্বাচন করুন --</option>'+opts}
+function memberPaid(m,year){return payments.filter(p=>p.member_id===m.id&&(!year||year==='all'||Number(p.year)===Number(year))).reduce((s,p)=>s+Number(p.paid_amount||0),0)}
+function memberRequired(m,year){return payments.filter(p=>p.member_id===m.id&&(!year||year==='all'||Number(p.year)===Number(year))).reduce((s,p)=>s+Number(p.required_amount||500),0)}
+function memberDue(m,year){return Math.max(memberRequired(m,year)-memberPaid(m,year),0)}
+function totalPaid(year){return payments.filter(p=>!year||year==='all'||Number(p.year)===Number(year)).reduce((s,p)=>s+Number(p.paid_amount||0),0)}
+function totalRequired(year){return payments.filter(p=>!year||year==='all'||Number(p.year)===Number(year)).reduce((s,p)=>s+Number(p.required_amount||500),0)}
+function totalExpense(year){return expenses.filter(e=>!year||year==='all'||Number(e.year)===Number(year)).reduce((s,e)=>s+Number(e.amount||0),0)}
+function totalProfit(year){return profits.filter(p=>!year||year==='all'||Number(p.year)===Number(year)).reduce((s,p)=>s+Number(p.total_profit||0),0)}
+function totalAssets(){return assets.reduce((s,a)=>s+Number(a.amount||0),0)}
+function currentFund(){return totalPaid('all')+totalProfit('all')-totalExpense('all')-totalAssets()}
+function renderHome(){const fund=totalPaid('all')+totalProfit('all');q('homeFund').textContent=money(fund);q('homeProfit').textContent=money(totalProfit('all'));q('homeExpense').textContent=money(totalExpense('all'));q('homeRemaining').textContent=money(currentFund())}
+function renderPersonalDueList(){const rows=members.map((m,i)=>{let t=memberPaid(m,'all'),d=memberDue(m,'all');return {serial:Number(m.serial_no||i+1),name:m.name,paid:t,due:d}});q('dueResult').innerHTML=`<div class="report-title"><h3>সদস্যদের বকেয়া হিসাব</h3><p>মাসিক ৳৫০০ • বার্ষিক ৳৬,০০০</p></div><div class="table-wrap"><table><thead><tr><th>ক্রমিক</th><th class="name">সদস্যের নাম</th>${years.map(y=>`<th>${y}</th>`).join('')}<th>মোট পরিশোধ</th><th>মোট বাকি</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.serial.toLocaleString('bn-BD')}</td><td class="name">${esc(r.name)}</td>${years.map(y=>`<td>${money(memberPaid(members.find(m=>m.name===r.name),y))}<br><span class="muted">বাকি ${money(memberDue(members.find(m=>m.name===r.name),y))}</span></td>`).join('')}<td>${money(r.paid)}</td><td>${money(r.due)}</td></tr>`).join('')}</tbody><tfoot><tr class="total-row"><td colspan="2">সর্বমোট</td>${years.map(y=>`<td>${money(totalPaid(y))}<br><span class="muted">বাকি ${money(Math.max(totalRequired(y)-totalPaid(y),0))}</span></td>`).join('')}<td>${money(totalPaid('all'))}</td><td>${money(Math.max(totalRequired('all')-totalPaid('all'),0))}</td></tr></tfoot></table></div>`}
+function renderPersonal(){const y=q('personalYear').value,id=q('personalMember').value;if(!id){q('personalResult').innerHTML='<div class="empty-state">সদস্য নির্বাচন করুন।</div>';return}const m=members.find(x=>x.id===id);const rows=payments.filter(p=>p.member_id===id&&(!y||y==='all'||Number(p.year)===Number(y))).sort((a,b)=>a.year-b.year||a.month-b.month);const yrs=y==='all'?years:years.filter(x=>String(x)===y);let h=`<div class="report-title"><h3>${esc(m.name)}</h3><p>${y==='all'?'সকল বছর':y+' সাল'}</p></div><div class="member-summary"><div>মোট নির্ধারিত<strong>${money(memberRequired(m,y))}</strong></div><div>মোট পরিশোধ<strong>${money(memberPaid(m,y))}</strong></div><div>মোট বাকি<strong>${money(memberDue(m,y))}</strong></div></div><div class="table-wrap"><table><thead><tr><th>সাল</th><th>মাস</th><th>নির্ধারিত</th><th>পরিশোধ</th><th>বাকি</th></tr></thead><tbody>`;yrs.forEach(yy=>{months.forEach((mo,i)=>{const p=rows.find(x=>Number(x.year)===yy&&Number(x.month)===i+1);const req=Number(p?.required_amount??500),paid=Number(p?.paid_amount??0),due=Math.max(req-paid,0);h+=`<tr><td>${yy}</td><td>${mo}</td><td>${money(req)}</td><td>${money(paid)}</td><td>${money(due)}</td></tr>`})});h+=`</tbody></table></div>`;q('personalResult').innerHTML=h}
+function renderAllMembers(){
+ const y=q('allMembersYear').value||'all';
+ if(y==='all'){
+  let h=`<div class="report-title"><h3>২০২১–২০২৪ সালের বার্ষিক সারসংক্ষেপ</h3><p>প্রতি বছরের পরিশোধ, বাকি, লভ্যাংশ, খরচ ও খরচের পর অবশিষ্ট তহবিল</p></div><div class="table-wrap"><table><thead><tr><th>সাল</th><th>মোট পরিশোধ</th><th>মোট বাকি</th><th>মোট লভ্যাংশ</th><th>মোট খরচ</th><th>খাতে রাখা</th><th>অবশিষ্ট তহবিল</th></tr></thead><tbody>`;
+  years.forEach(yy=>{
+   const paid=totalPaid(yy), due=Math.max(totalRequired(yy)-paid,0), profit=totalProfit(yy), expense=totalExpense(yy), allocated=assets.filter(a=>Number(a.year)===yy).reduce((s,a)=>s+Number(a.amount||0),0), remaining=paid+profit-expense-allocated;
+   h+=`<tr><td>${yy}</td><td>${money(paid)}</td><td>${money(due)}</td><td>${money(profit)}</td><td>${money(expense)}</td><td>${money(allocated)}</td><td><b>${money(remaining)}</b></td></tr>`;
+  });
+  const paid=totalPaid('all'),due=Math.max(totalRequired('all')-paid,0),profit=totalProfit('all'),expense=totalExpense('all'),allocated=totalAssets(),remaining=currentFund();
+  h+=`</tbody><tfoot><tr class="total-row"><td>সর্বমোট</td><td>${money(paid)}</td><td>${money(due)}</td><td>${money(profit)}</td><td>${money(expense)}</td><td>${money(allocated)}</td><td>${money(remaining)}</td></tr></tfoot></table></div>`;
+  q('allMembersResult').innerHTML=h;return;
  }
- document.querySelector('#monthlyDetail').innerHTML=h;
- location.hash='monthly';
+ let h=`<div class="report-title"><h3>${y} সালের সকল সদস্যদের হিসাব</h3><p>মাসভিত্তিক পরিশোধ ও বকেয়া</p></div><div class="table-wrap"><table><thead><tr><th>ক্রমিক</th><th class="name">সদস্যের নাম</th>${months.map(m=>`<th>${m}</th>`).join('')}<th>মোট পরিশোধ</th><th>মোট বাকি</th></tr></thead><tbody>`;
+ members.forEach((m,i)=>{
+  h+=`<tr><td>${Number(m.serial_no||i+1).toLocaleString('bn-BD')}</td><td class="name">${esc(m.name)}</td>`;
+  months.forEach((mo,mi)=>{const p=payments.find(x=>x.member_id===m.id&&Number(x.year)===Number(y)&&Number(x.month)===mi+1);h+=`<td>${money(p?.paid_amount||0)}<br><span class="muted">বাকি ${money(Math.max(Number(p?.required_amount??500)-Number(p?.paid_amount||0),0))}</span></td>`});
+  h+=`<td>${money(memberPaid(m,y))}</td><td>${money(memberDue(m,y))}</td></tr>`;
+ });
+ h+=`</tbody><tfoot><tr class="total-row"><td colspan="2">সর্বমোট</td>${months.map((_,mi)=>`<td>${money(payments.filter(p=>Number(p.year)===Number(y)&&Number(p.month)===mi+1).reduce((s,p)=>s+Number(p.paid_amount||0),0))}</td>`).join('')}<td>${money(totalPaid(y))}</td><td>${money(Math.max(totalRequired(y)-totalPaid(y),0))}</td></tr></tfoot></table></div><div class="member-summary"><div>মোট পরিশোধ<strong>${money(totalPaid(y))}</strong></div><div>মোট বাকি<strong>${money(Math.max(totalRequired(y)-totalPaid(y),0))}</strong></div><div>মোট লভ্যাংশ<strong>${money(totalProfit(y))}</strong></div><div>মোট খরচ<strong>${money(totalExpense(y))}</strong></div></div>`;
+ q('allMembersResult').innerHTML=h;
 }
-
-function renderAssets(){document.querySelector('#assetRows').innerHTML=assets.map(x=>`<tr><td>${x.year}</td><td>${x.category}</td><td>${x.description}</td><td>${money(x.amount)}</td><td>${x.status==='active'?'বর্তমানে আছে':x.status}</td></tr>`).join('')||'<tr><td colspan="5">কোনো সম্পদ/খাতের তথ্য নেই</td></tr>';}
-function renderYears(){document.querySelector('#yearRows').innerHTML=annual.map(x=>`<tr><td>${x.year}</td><td>${money(x.total_deposit)}</td><td>${money(x.total_profit)}</td><td>${money(x.total_expense)}</td><td>${money(x.total_investment)}</td><td>${money(x.asset_amount)}</td></tr>`).join('');}
-function renderYearSelect(){const s=document.querySelector('#yearSelect');s.innerHTML='<option value="all">সকল বছর</option>'+annual.map(x=>`<option value="${x.year}">${x.year}</option>`).join('');}
-function showYear(v){const rows=v==='all'?annual:annual.filter(x=>String(x.year)===v);document.querySelector('#annualDeposit').textContent=money(rows.reduce((s,x)=>s+Number(x.total_deposit),0));document.querySelector('#annualExpense').textContent=money(rows.reduce((s,x)=>s+Number(x.total_expense),0));document.querySelector('#annualInvestment').textContent=money(rows.reduce((s,x)=>s+Number(x.total_investment),0));document.querySelector('#annualProfit').textContent=money(rows.reduce((s,x)=>s+Number(x.total_profit),0));document.querySelector('#annualAsset').textContent=money(rows.reduce((s,x)=>s+Number(x.asset_amount),0));}
-function renderNotices(list){document.querySelector('#noticeRows').innerHTML=list.map(x=>`<article class="notice"><h3>${x.title}</h3><p>${x.description}</p><small>${x.publish_date}</small></article>`).join('')||'<p>কোনো প্রকাশিত নোটিশ নেই।</p>';}
-function setMsg(t){console.warn(t);}
-
-async function checkAdmin(){
- if(!sb)return;
- const {data:{session}}=await sb.auth.getSession();
- adminUser=session?.user||null;
- if(adminUser){
-   const {data}=await sb.from('admin_users').select('user_id').eq('user_id',adminUser.id).maybeSingle();
-   if(data){document.querySelector('#loginBox').hidden=true;document.querySelector('#adminBox').hidden=false;document.querySelector('#adminUser').textContent=adminUser.email;fillPayMembers();}
-   else{document.querySelector('#loginMsg').textContent='এই অ্যাকাউন্টে অ্যাডমিন অনুমতি নেই।';}
- }
+function memberPaidMonth(m,y,mo){const p=payments.find(x=>x.member_id===m.id&&Number(x.year)===Number(y)&&Number(x.month)===Number(mo));return Number(p?.paid_amount||0)}
+function renderFund(){const fund=totalPaid('all')+totalProfit('all'),expense=totalExpense('all'),remaining=currentFund();q('fundTotal').textContent=money(fund);q('fundProfit').textContent=money(totalProfit('all'));q('fundExpense').textContent=money(expense);q('fundRemaining').textContent=money(remaining);let h=`<div class="report-title"><h3>অবশিষ্ট তহবিল যে সকল খাতে রাখা/ব্যবহৃত হয়েছে</h3><p>মোট তহবিল − মোট খরচ − খাতে রাখা অর্থ = অবশিষ্ট তহবিল</p></div>`;h+=`<div class="table-wrap"><table><thead><tr><th>ক্রমিক</th><th>বছর</th><th>খাত</th><th>কার কাছে/কোথায়</th><th>পরিমাণ</th><th>তারিখ</th></tr></thead><tbody>`;h+=assets.map((a,i)=>`<tr><td>${(i+1).toLocaleString('bn-BD')}</td><td>${a.year}</td><td>${esc(a.category)}</td><td class="name">${esc(a.description)}</td><td>${money(a.amount)}</td><td>${esc(a.date||'')}</td></tr>`).join('')||'<tr><td colspan="6">এখনও কোনো খাত যোগ করা হয়নি।</td></tr>';h+=`</tbody><tfoot><tr class="total-row"><td colspan="4">খাতে রাখা/ব্যবহৃত মোট</td><td>${money(totalAssets())}</td><td></td></tr></tfoot></table></div><div class="summary-card highlight" style="margin-top:14px;text-align:center"><span>সব হিসাবের পর বর্তমানে অবশিষ্ট তহবিল</span><strong>${money(remaining)}</strong></div>`;q('fundResult').innerHTML=h}
+function renderNotices(){const html=notices.map(n=>`<article class="notice"><h3>${esc(n.title)}</h3><p>${esc(n.description)}</p><small>${esc(n.publish_date||'')}</small></article>`).join('')||'<p class="empty-state">কোনো প্রকাশিত নোটিশ নেই।</p>';q('noticeResult').innerHTML=html;q('homeNotices').innerHTML=notices.slice(0,3).map(n=>`<article class="notice"><h3>${esc(n.title)}</h3><p>${esc(n.description)}</p><small>${esc(n.publish_date||'')}</small></article>`).join('')||'<p class="empty-state">কোনো নোটিশ নেই।</p>'}
+function printSection(id){document.querySelectorAll('.page-section').forEach(x=>x.classList.remove('print-target'));const el=q(id);if(el){el.closest('.page-section').classList.add('print-target');setTimeout(()=>{window.print();setTimeout(()=>el.closest('.page-section').classList.remove('print-target'),500)},50)}}
+function csvDownload(name,rows){const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=name;a.click();URL.revokeObjectURL(a.href)}
+function downloadDueCSV(){const rows=[['ক্রমিক','সদস্যের নাম',...years.map(String),'মোট পরিশোধ','মোট বাকি']];members.forEach((m,i)=>rows.push([m.serial_no||i+1,m.name,...years.map(y=>memberPaid(m,y)),memberPaid(m,'all'),memberDue(m,'all')]));csvDownload('bokea-list.csv',rows)}
+function downloadAllMembersCSV(){const y=q('allMembersYear').value||'all',rows=[['ক্রমিক','সদস্যের নাম',...months,'মোট পরিশোধ','মোট বাকি']];members.forEach((m,i)=>rows.push([m.serial_no||i+1,m.name,...months.map((_,mi)=>years.reduce((s,yy)=>s+memberPaidMonth(m,yy,mi+1),0)),memberPaid(m,y),memberDue(m,y)]));csvDownload(`members-${y}.csv`,rows)}
+function downloadAssetsCSV(){csvDownload('fund-assets.csv',[['বছর','খাত','কার কাছে/কোথায়','পরিমাণ','তারিখ'],...assets.map(a=>[a.year,a.category,a.description,a.amount,a.date])])}
+async function checkAdmin(){if(!sb)return;const {data:{session}}=await sb.auth.getSession();adminUser=session?.user||null;if(!adminUser){q('loginBox').hidden=false;q('adminBox').hidden=true;return}const {data,error}=await sb.from('admin_users').select('user_id').eq('user_id',adminUser.id).maybeSingle();if(error||!data){q('loginBox').hidden=false;q('adminBox').hidden=true;q('loginMsg').textContent='এই অ্যাকাউন্টে অ্যাডমিন অনুমতি নেই।';return}q('loginBox').hidden=true;q('adminBox').hidden=false;q('adminUser').textContent=adminUser.email;renderAdminData()}
+async function login(){q('loginMsg').textContent='লগইন হচ্ছে...';const {error}=await sb.auth.signInWithPassword({email:q('adminEmail').value.trim(),password:q('adminPassword').value});if(error){q('loginMsg').textContent=error.message;return}q('loginMsg').textContent='লগইন সফল।';await checkAdmin()}
+async function logout(){await sb.auth.signOut();location.hash='admin';location.reload()}
+function formDataObj(form){return Object.fromEntries(new FormData(form).entries())}
+async function saveOrUpdate(table,form,make){const d=formDataObj(form);const id=d.id;const row=make(d);let res=id?await sb.from(table).update(row).eq('id',id):await sb.from(table).insert(row);if(res.error){q('adminMsg').textContent=res.error.message;return}q('adminMsg').textContent='সফলভাবে সংরক্ষণ হয়েছে ✓';resetForm(form.id);await load()}
+async function saveMember(){const d=formDataObj(q('memberForm'));await saveOrUpdate('members',q('memberForm'),x=>({name:x.name.trim(),mobile:x.mobile||null,status:'active'}))}
+async function savePayment(){const d=formDataObj(q('paymentForm'));await saveOrUpdate('payments',q('paymentForm'),x=>({member_id:x.member_id,year:+x.year,month:+x.month,required_amount:500,paid_amount:+x.paid_amount,payment_date:null}))}
+async function saveProfit(){const d=formDataObj(q('profitForm'));const {error}=await sb.from('profits').upsert({year:+d.year,total_profit:+d.total_profit},{onConflict:'year'});q('adminMsg').textContent=error?error.message:'লভ্যাংশ সংরক্ষণ হয়েছে ✓';if(!error){q('profitForm').reset();await load()}}
+async function saveExpense(){await saveOrUpdate('expenses',q('expenseForm'),x=>({year:+x.year,date:x.date,description:x.description,amount:+x.amount}))}
+async function saveAsset(){await saveOrUpdate('assets',q('assetForm'),x=>({year:+x.year,date:x.date,category:x.category,description:x.description,amount:+x.amount,status:'active'}))}
+async function saveNotice(){const d=formDataObj(q('noticeForm'));await saveOrUpdate('notices',q('noticeForm'),x=>({title:x.title,description:x.description,status:'published'}))}
+async function del(table,id){if(!confirm('এই তথ্যটি মুছে ফেলতে চান?'))return;const {error}=await sb.from(table).delete().eq('id',id);q('adminMsg').textContent=error?error.message:'মুছে ফেলা হয়েছে ✓';if(!error)await load()}
+function editMember(id){const m=members.find(x=>x.id===id);if(!m)return;const f=q('memberForm');f.id.value=m.id;f.name.value=m.name;f.mobile.value=m.mobile||'';f.scrollIntoView({behavior:'smooth'})}
+function editPayment(id){const p=payments.find(x=>x.id===id);if(!p)return;const f=q('paymentForm');f.id.value=p.id;f.member_id.value=p.member_id;f.year.value=p.year;f.month.value=p.month;f.paid_amount.value=p.paid_amount;f.scrollIntoView({behavior:'smooth'})}
+function editExpense(id){const x=expenses.find(x=>x.id===id);if(!x)return;const f=q('expenseForm');f.id.value=x.id;f.year.value=x.year;f.date.value=x.date;f.description.value=x.description;f.amount.value=x.amount;f.scrollIntoView({behavior:'smooth'})}
+function editAsset(id){const x=assets.find(x=>x.id===id);if(!x)return;const f=q('assetForm');f.id.value=x.id;f.year.value=x.year;f.date.value=x.date;f.category.value=x.category;f.description.value=x.description;f.amount.value=x.amount;f.scrollIntoView({behavior:'smooth'})}
+function editNotice(id){const x=notices.find(x=>x.id===id);if(!x)return;const f=q('noticeForm');f.id.value=x.id;f.title.value=x.title;f.description.value=x.description;f.scrollIntoView({behavior:'smooth'})}
+function renderAdminData(){
+ q('adminMembers').innerHTML=`<table><thead><tr><th>ক্রম</th><th class="name">নাম</th><th>মোবাইল</th><th>অ্যাকশন</th></tr></thead><tbody>${members.map((m,i)=>`<tr><td>${Number(m.serial_no||i+1).toLocaleString('bn-BD')}</td><td class="name">${esc(m.name)}</td><td>${esc(m.mobile||'-')}</td><td class="row-actions"><button class="small-btn edit" onclick="editMember('${m.id}')">Edit</button><button class="small-btn del" onclick="del('members','${m.id}')">Delete</button></td></tr>`).join('')}</tbody></table>`;
+ q('adminPayments').innerHTML=`<table><thead><tr><th>সদস্য</th><th>সাল</th><th>মাস</th><th>জমা</th><th>অ্যাকশন</th></tr></thead><tbody>${payments.slice().sort((a,b)=>b.year-a.year||b.month-a.month).map(p=>`<tr><td class="name">${esc(members.find(m=>m.id===p.member_id)?.name||'')}</td><td>${p.year}</td><td>${months[p.month-1]}</td><td>${money(p.paid_amount)}</td><td class="row-actions"><button class="small-btn edit" onclick="editPayment(${p.id})">Edit</button><button class="small-btn del" onclick="del('payments',${p.id})">Delete</button></td></tr>`).join('')}</tbody></table>`;
+ q('adminExpenses').innerHTML=`<table><thead><tr><th>বছর</th><th>তারিখ</th><th class="name">বিবরণ</th><th>পরিমাণ</th><th>অ্যাকশন</th></tr></thead><tbody>${expenses.map(x=>`<tr><td>${x.year}</td><td>${x.date}</td><td class="name">${esc(x.description)}</td><td>${money(x.amount)}</td><td class="row-actions"><button class="small-btn edit" onclick="editExpense(${x.id})">Edit</button><button class="small-btn del" onclick="del('expenses',${x.id})">Delete</button></td></tr>`).join('')}</tbody></table>`;
+ q('adminAssets').innerHTML=`<table><thead><tr><th>বছর</th><th>খাত</th><th class="name">বিবরণ</th><th>পরিমাণ</th><th>অ্যাকশন</th></tr></thead><tbody>${assets.map(x=>`<tr><td>${x.year}</td><td>${esc(x.category)}</td><td class="name">${esc(x.description)}</td><td>${money(x.amount)}</td><td class="row-actions"><button class="small-btn edit" onclick="editAsset(${x.id})">Edit</button><button class="small-btn del" onclick="del('assets',${x.id})">Delete</button></td></tr>`).join('')}</tbody></table>`;
+ q('adminNotices').innerHTML=`<table><thead><tr><th>শিরোনাম</th><th class="name">বিবরণ</th><th>তারিখ</th><th>অ্যাকশন</th></tr></thead><tbody>${notices.map(x=>`<tr><td>${esc(x.title)}</td><td class="name">${esc(x.description)}</td><td>${x.publish_date||''}</td><td class="row-actions"><button class="small-btn edit" onclick="editNotice(${x.id})">Edit</button><button class="small-btn del" onclick="del('notices',${x.id})">Delete</button></td></tr>`).join('')}</tbody></table>`;
 }
-async function login(){const email=adminEmail.value.trim(),password=adminPassword.value;const {error}=await sb.auth.signInWithPassword({email,password});loginMsg.textContent=error?error.message:'লগইন সফল';await checkAdmin();}
-async function logout(){await sb.auth.signOut();location.reload();}
-function fillPayMembers(){payMember.innerHTML=members.map(x=>`<option value="${x.id}">${x.name}</option>`).join('');}
-function formObj(form){return Object.fromEntries(new FormData(form).entries());}
-async function adminInsert(table,form,transform=x=>x){
- const {error}=await sb.from(table).insert(transform(formObj(form)));adminMsg.textContent=error?error.message:'সংরক্ষণ হয়েছে ✓';if(!error){form.reset();await load();fillPayMembers();}
-}
-async function saveMember(){const f=memberForm;const d=formObj(f);const {error}=await sb.from('members').upsert({name:d.name.trim(),mobile:d.mobile||null,status:'active'},{onConflict:'name'});adminMsg.textContent=error?error.message:'সদস্য সংরক্ষণ হয়েছে ✓';f.reset();await load();fillPayMembers();}
-async function savePayment(){const d=formObj(paymentForm);await adminInsert('payments',paymentForm,()=>({member_id:d.member_id,year:+d.year,month:+d.month,required_amount:500,paid_amount:+d.paid_amount}));}
-async function saveProfit(){const d=formObj(profitForm);const {error}=await sb.from('profits').upsert({year:+d.year,total_profit:+d.total_profit},{onConflict:'year'});adminMsg.textContent=error?error.message:'লাভ সংরক্ষণ হয়েছে ✓';profitForm.reset();await load();}
-async function bootAdmin(){document.querySelector('#loginBtn')?.addEventListener('click',login);document.querySelector('#logoutBtn')?.addEventListener('click',logout);document.querySelector('#memberForm')?.addEventListener('submit',e=>{e.preventDefault();saveMember()});document.querySelector('#paymentForm')?.addEventListener('submit',e=>{e.preventDefault();savePayment()});document.querySelector('#profitForm')?.addEventListener('submit',e=>{e.preventDefault();saveProfit()});document.querySelector('#expenseForm')?.addEventListener('submit',e=>{e.preventDefault();const d=formObj(expenseForm);adminInsert('expenses',expenseForm,()=>({year:+d.year,date:d.date,description:d.description,amount:+d.amount}))});document.querySelector('#investmentForm')?.addEventListener('submit',e=>{e.preventDefault();const d=formObj(investmentForm);adminInsert('investments',investmentForm,()=>({year:+d.year,date:d.date,description:d.description,amount:+d.amount}))});document.querySelector('#assetForm')?.addEventListener('submit',e=>{e.preventDefault();const d=formObj(assetForm);adminInsert('assets',assetForm,()=>({year:+d.year,date:d.date,category:d.category,description:d.description,amount:+d.amount,status:'active'}))});document.querySelector('#noticeForm')?.addEventListener('submit',e=>{e.preventDefault();const d=formObj(noticeForm);adminInsert('notices',noticeForm,()=>({title:d.title,description:d.description,status:'published'}))});await checkAdmin();}
-document.querySelector('#search')?.addEventListener('input',renderMembers);
-document.querySelector('#yearSelect')?.addEventListener('change',e=>showYear(e.target.value));
-load();bootAdmin();
+q('menuBtn').addEventListener('click',()=>q('mainNav').classList.toggle('open'));q('personalSearch').addEventListener('click',renderPersonal);q('allMembersSearch').addEventListener('click',renderAllMembers);q('allMembersYear').addEventListener('change',renderAllMembers);q('loginBtn').addEventListener('click',login);q('logoutBtn').addEventListener('click',logout);q('memberForm').addEventListener('submit',e=>{e.preventDefault();saveMember()});q('paymentForm').addEventListener('submit',e=>{e.preventDefault();savePayment()});q('profitForm').addEventListener('submit',e=>{e.preventDefault();saveProfit()});q('expenseForm').addEventListener('submit',e=>{e.preventDefault();saveExpense()});q('assetForm').addEventListener('submit',e=>{e.preventDefault();saveAsset()});q('noticeForm').addEventListener('submit',e=>{e.preventDefault();saveNotice()});
+load();
