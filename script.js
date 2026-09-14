@@ -96,6 +96,14 @@ load();
  const $=id=>document.getElementById(id);
  function route(){const id=(location.hash||'#personal').slice(1);document.querySelectorAll('.page-section').forEach(s=>s.classList.toggle('active',s.id===id));document.querySelectorAll('[data-menu-link]').forEach(a=>a.classList.toggle('active',a.dataset.menuLink===id));setMenu(false);}
  window.addEventListener('hashchange',route); route();
+
+// Large touch-friendly selection boxes: use the device's native chooser so Android shows
+// the same clean radio-style selection sheet as the supplied reference screenshot.
+document.querySelectorAll('select').forEach(sel=>{
+  sel.addEventListener('focus',()=>sel.classList.add('select-focused'));
+  sel.addEventListener('blur',()=>sel.classList.remove('select-focused'));
+});
+
  document.querySelectorAll('[data-form]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-form]').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');document.querySelector('.add-open').classList.add('ready');}));
  const addBtn=document.querySelector('.add-open'); if(addBtn)addBtn.addEventListener('click',()=>{const b=document.querySelector('[data-form].selected');if(!b)return;document.querySelectorAll('.add-area').forEach(x=>x.style.display='');const map={member:'memberForm',payment:'paymentForm',profit:'profitForm',expense:'expenseForm',asset:'assetForm',notice:'noticeForm'};document.querySelectorAll('.admin-form').forEach(f=>f.style.display='none');const f=$(map[b.dataset.form]);if(f){f.style.display='block';f.scrollIntoView({behavior:'smooth',block:'start'});}});
  document.querySelectorAll('[data-manage]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-manage]').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');}));
