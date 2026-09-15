@@ -36,7 +36,7 @@
   <div class="drawer-title">মেইন মেনু</div>
   <a href="#personal" data-view="personal"><span>👤</span>সদস্যদের ব্যক্তিগত হিসাব</a>
   <a href="#members" data-view="members"><span>👥</span>সকল সদস্যদের হিসাব</a>
-  <a href="#due" data-view="due"><span>📊</span>মোট হিসাব</a>
+  <a href="#due" data-view="due"><span>📊</span>সংস্থার মোট হিসাব</a>
   <a href="#profitExpenseDetails" data-view="profitExpenseDetails"><span>📋</span>লভ্যাংশ ও খরচের বিবরণ</a>
   <a href="#fund" data-view="fund"><span>💰</span>অবশিষ্ট তহবিলের খাত</a>
   <a href="#notices" data-view="notices"><span>📢</span>নোটিশ</a>
@@ -49,6 +49,7 @@
       <span class="title-icon">👤</span>
       <div><h2>সদস্যদের ব্যক্তিগত হিসাব</h2><p>সাল ও সদস্য নির্বাচন করে ব্যক্তিগত হিসাব দেখুন</p></div>
     </div>
+    <div id="personalTotalResult" class="report-output"></div>
     <form id="personalForm" novalidate>
       <div class="field"><label for="personalYear">সাল নির্বাচন করুন <b>*</b></label><select id="personalYear" required></select></div>
       <div class="field"><label for="personalMember">সদস্য নির্বাচন করুন <b>*</b></label><select id="personalMember" required><option value="">-- সদস্য নির্বাচন করুন --</option></select></div>
@@ -68,7 +69,7 @@
   </section>
 
   <section id="due" class="result-card page-section">
-    <div class="section-title"><span class="title-icon">📊</span><div><h2>মোট হিসাব</h2><p>সংস্থার সকল বছরের মোট আর্থিক হিসাব</p></div></div>
+    <div class="section-title"><span class="title-icon">📊</span><div><h2>সংস্থার মোট হিসাব</h2><p>সংস্থার সকল বছরের মোট আর্থিক হিসাব</p></div></div>
     <div id="totalResult" class="report-output"><div class="loading">ডাটা লোড হচ্ছে...</div></div>
   </section>
 
@@ -162,6 +163,6 @@
   <div class="container">© <span id="footerYear"></span> আল ইখওয়ান ইসলামী সংস্থা বাংলাদেশ<div class="footer-sub">সকল অধিকার সংরক্ষিত</div></div>
 </footer>
 <script src="supabase-config.js"></script>
-<script src="script.js?v=11"></script>
+<script src="script.js?v=13"></script>
 </body>
 </html>

@@ -14,10 +14,14 @@ const YEARLY_REQUIRED=MONTHLY_REQUIRED*MONTHS_PER_YEAR;
 
 function getYears(){
   const found=new Set(['2021','2022','2023','2024']);
-  payments.forEach(p=>{if(p.year!==null&&p.year!==undefined&&String(p.year).trim())found.add(String(p.year).trim())});
-  profits.forEach(p=>{if(p.year!==null&&p.year!==undefined&&String(p.year).trim())found.add(String(p.year).trim())});
-  expenses.forEach(p=>{if(p.year!==null&&p.year!==undefined&&String(p.year).trim())found.add(String(p.year).trim())});
-  assets.forEach(p=>{if(p.year!==null&&p.year!==undefined&&String(p.year).trim())found.add(String(p.year).trim())});
+  const addYear=y=>{
+    const year=String(y??'').trim();
+    if(year && year!=='2025' && year!=='2026')found.add(year);
+  };
+  payments.forEach(p=>addYear(p.year));
+  profits.forEach(p=>addYear(p.year));
+  expenses.forEach(p=>addYear(p.year));
+  assets.forEach(p=>addYear(p.year));
   return [...found].sort((a,b)=>Number(a)-Number(b));
 }
 function fillYearSelect(el,includeAll=false){
@@ -118,8 +122,19 @@ async function load(){
   if(errors.length){console.error(...errors.map(x=>x.error));q('totalResult').innerHTML='<div class="empty-state">ডাটা লোড করতে সমস্যা হয়েছে। Supabase/RLS সেটিংস পরীক্ষা করুন।</div>';return;}
   members=m.data||[];payments=p.data||[];profits=pr.data||[];expenses=e.data||[];assets=a.data||[];notices=n.data||[];
   fillYearSelectors();fillMemberSelectors();
-  renderTotal();renderProfitExpenseDetails();renderFund();renderNotices();renderAllMembersPreview();
+  renderTotal();renderPersonalTotal();renderProfitExpenseDetails();renderFund();renderNotices();renderAllMembersPreview();
   await checkAdmin();
+}
+
+function renderPersonalTotal(){
+  const deposit=totalPaid('all'),profit=totalProfit('all'),expense=totalExpense('all'),remaining=currentFund();
+  q('personalTotalResult').innerHTML=`<div class="report-title"><h3>সংস্থার মোট হিসাব</h3><p>প্রতিষ্ঠার শুরু থেকে সকল বছরের সমন্বিত হিসাব</p></div>
+  <div class="summary-grid total-summary">
+    <article><span>মোট জমা</span><strong>${money(deposit)}</strong></article>
+    <article><span>মোট লভ্যাংশ</span><strong>${money(profit)}</strong></article>
+    <article><span>মোট খরচ</span><strong>${money(expense)}</strong></article>
+    <article class="highlight"><span>অবশিষ্ট তহবিল</span><strong>${money(remaining)}</strong></article>
+  </div>`;
 }
 
 function renderPersonal(){
@@ -181,10 +196,10 @@ function renderProfitExpenseDetails(){
 }
 function renderFund(){
   const deposit=totalPaid('all'),profit=totalProfit('all'),expense=totalExpense('all'),allocated=totalAssets('all'),remaining=currentFund();
-  const body=assets.map((a,i)=>`<tr><td>${(i+1).toLocaleString('bn-BD')}</td><td>${esc(a.year)}</td><td>${esc(a.category)}</td><td class="name">${esc(a.description)}</td><td>${money(a.amount)}</td><td>${esc(a.date||'')}</td></tr>`).join('');
+  const body=assets.map((a,i)=>`<tr><td>${(i+1).toLocaleString('bn-BD')}</td><td>${esc(a.year)}</td><td>${esc(a.category)}</td><td class="detail-text">${esc(a.description)}</td><td>${money(a.amount)}</td><td>${esc(a.date||'')}</td></tr>`).join('');
   q('fundResult').innerHTML=`<div class="report-title"><h3>তহবিল ব্যবহারের খাতসমূহ</h3><p>যে সকল খাতে তহবিল ব্যবহার করা হয়েছে</p></div>
-  <div class="table-wrap"><table><thead><tr><th>ক্রমিক</th><th>সাল</th><th>খাত</th><th class="name">বিস্তারিত</th><th>পরিমাণ</th><th>তারিখ</th></tr></thead><tbody>${body||'<tr><td colspan="6">এখনও কোনো খাত যোগ করা হয়নি।</td></tr>'}</tbody><tfoot><tr class="total-row"><td colspan="4">বিভিন্ন খাতে ব্যবহার করা মোট</td><td>${money(allocated)}</td><td></td></tr></tfoot></table></div>
-  <div class="fund-summary-table"><h3>তহবিলের সংক্ষিপ্ত হিসাব</h3><div class="table-wrap"><table><tbody>
+  <div class="detail-block fund-detail"><div class="detail-heading"><span>🏦</span><h3>তহবিল ব্যবহারের খাতসমূহ</h3></div><div class="table-wrap"><table class="detail-table"><thead><tr><th>ক্রমিক</th><th>সাল</th><th>খাত</th><th class="detail-text">বিস্তারিত</th><th>পরিমাণ</th><th>তারিখ</th></tr></thead><tbody>${body||'<tr><td colspan="6">এখনও কোনো খাত যোগ করা হয়নি।</td></tr>'}</tbody><tfoot><tr class="total-row"><td colspan="4">বিভিন্ন খাতে ব্যবহার করা মোট</td><td>${money(allocated)}</td><td></td></tr></tfoot></table></div></div>
+  <div class="detail-block fund-summary-detail"><div class="detail-heading"><span>💰</span><h3>তহবিলের সংক্ষিপ্ত হিসাব</h3></div><div class="table-wrap"><table class="detail-table"><tbody>
     <tr><th>মোট জমা</th><td>${money(deposit)}</td></tr><tr><th>মোট লভ্যাংশ</th><td>${money(profit)}</td></tr><tr><th>মোট বিবিধ খরচ</th><td>${money(expense)}</td></tr><tr><th>বিভিন্ন খাতে ব্যবহার</th><td>${money(allocated)}</td></tr><tr class="highlight-row"><th>বর্তমান অবশিষ্ট তহবিল</th><td><b>${money(remaining)}</b></td></tr>
   </tbody></table></div></div>${printButton('fundResult')}`;
 }
