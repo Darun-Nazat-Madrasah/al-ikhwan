@@ -217,9 +217,6 @@ function renderAdminData(){
   const selectedMonth=q('paymentManageMonth')?.value||'all';
   const search=(q('paymentManageSearch')?.value||'').trim().toLowerCase();
   const paymentRows=payments.filter(p=>{
-    // ০ টাকার placeholder record database-এ থাকবে, কিন্তু Excel-এর প্রকৃত জমার
-    // তালিকার সঙ্গে মিল রেখে Admin management-এ শুধু বাস্তব জমা দেখানো হবে।
-    if(Number(p.paid_amount||0)<=0)return false;
     if(selectedYear!=='all' && String(p.year)!==String(selectedYear))return false;
     if(selectedMonth!=='all' && Number(p.month)!==Number(selectedMonth))return false;
     if(!search)return true;
