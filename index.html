@@ -37,6 +37,7 @@
   <a href="#personal" data-view="personal"><span>👤</span>সদস্যদের ব্যক্তিগত হিসাব</a>
   <a href="#members" data-view="members"><span>👥</span>সকল সদস্যদের হিসাব</a>
   <a href="#due" data-view="due"><span>📊</span>মোট হিসাব</a>
+  <a href="#profitExpenseDetails" data-view="profitExpenseDetails"><span>📋</span>লভ্যাংশ ও খরচের বিবরণ</a>
   <a href="#fund" data-view="fund"><span>💰</span>অবশিষ্ট তহবিলের খাত</a>
   <a href="#notices" data-view="notices"><span>📢</span>নোটিশ</a>
   <a href="#admin" data-view="admin"><span>🔐</span>এডমিন প্যানেল</a>
@@ -69,6 +70,11 @@
   <section id="due" class="result-card page-section">
     <div class="section-title"><span class="title-icon">📊</span><div><h2>মোট হিসাব</h2><p>সংস্থার সকল বছরের মোট আর্থিক হিসাব</p></div></div>
     <div id="totalResult" class="report-output"><div class="loading">ডাটা লোড হচ্ছে...</div></div>
+  </section>
+
+  <section id="profitExpenseDetails" class="result-card page-section">
+    <div class="section-title"><span class="title-icon">📋</span><div><h2>লভ্যাংশ ও খরচের বিবরণ</h2><p>লভ্যাংশ ও বিবিধ খরচের বিস্তারিত হিসাব</p></div></div>
+    <div id="profitExpenseDetailsResult" class="report-output"><div class="loading">ডাটা লোড হচ্ছে...</div></div>
   </section>
 
   <section id="fund" class="result-card page-section">
@@ -112,7 +118,7 @@
       <div id="addArea" class="admin-form-area">
         <form id="memberForm" class="admin-form"><h3>👤 নতুন সদস্য</h3><input name="id" type="hidden"><input name="name" required placeholder="সদস্যের নাম"><input name="address" placeholder="ঠিকানা"><input name="mobile" placeholder="মোবাইল নম্বর"><div class="form-actions"><button class="btn btn-primary">সদস্য সংরক্ষণ</button><button type="button" class="btn btn-light" onclick="resetForm('memberForm')">পরিষ্কার</button></div></form>
 
-        <form id="paymentForm" class="admin-form"><h3>💰 মাসিক জমা</h3><input name="id" type="hidden"><select name="member_id" id="payMember" required></select><input name="year" type="number" min="2021" max="2100" required placeholder="বছর"><select name="month" required><option value="">-- মাস নির্বাচন করুন --</option><option value="1">জানুয়ারি</option><option value="2">ফেব্রুয়ারি</option><option value="3">মার্চ</option><option value="4">এপ্রিল</option><option value="5">মে</option><option value="6">জুন</option><option value="7">জুলাই</option><option value="8">আগস্ট</option><option value="9">সেপ্টেম্বর</option><option value="10">অক্টোবর</option><option value="11">নভেম্বর</option><option value="12">ডিসেম্বর</option></select><input name="paid_amount" type="number" min="0" required placeholder="জমার পরিমাণ"><div class="form-actions"><button class="btn btn-primary">জমা সংরক্ষণ</button><button type="button" class="btn btn-light" onclick="resetForm('paymentForm')">পরিষ্কার</button></div></form>
+        <form id="paymentForm" class="admin-form"><h3>💰 মাসিক জমা</h3><input name="id" type="hidden"><select name="member_id" id="payMember" required></select><input name="year" type="number" min="2021" max="2100" required placeholder="বছর"><select name="month" required><option value="">-- শুরুর মাস নির্বাচন করুন --</option><option value="1">জানুয়ারি</option><option value="2">ফেব্রুয়ারি</option><option value="3">মার্চ</option><option value="4">এপ্রিল</option><option value="5">মে</option><option value="6">জুন</option><option value="7">জুলাই</option><option value="8">আগস্ট</option><option value="9">সেপ্টেম্বর</option><option value="10">অক্টোবর</option><option value="11">নভেম্বর</option><option value="12">ডিসেম্বর</option></select><input name="month_count" type="number" min="1" max="12" value="1" required placeholder="কত মাস"><input name="paid_amount" type="number" min="0" step="0.01" required placeholder="মোট জমার পরিমাণ"><div class="form-actions"><button class="btn btn-primary">জমা সংরক্ষণ</button><button type="button" class="btn btn-light" onclick="resetForm('paymentForm')">পরিষ্কার</button></div></form>
 
         <form id="profitForm" class="admin-form"><h3>📈 লভ্যাংশ</h3><input name="id" type="hidden"><input name="year" type="number" min="2021" max="2100" required placeholder="বছর"><input name="description" required placeholder="লভ্যাংশের বিবরণ"><input name="total_profit" type="number" min="0" required placeholder="মোট লভ্যাংশ"><div class="form-actions"><button class="btn btn-primary">লভ্যাংশ সংরক্ষণ</button><button type="button" class="btn btn-light" onclick="resetForm('profitForm')">পরিষ্কার</button></div></form>
 

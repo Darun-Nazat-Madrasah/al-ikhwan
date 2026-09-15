@@ -194,3 +194,9 @@ footer{background:#076f45;color:#fff;text-align:center;padding:24px 0;font-size:
   body.printing-report .report-title:before,body.printing-report .report-title:after{content:none!important}
   body.printing-report .report-title h3,body.printing-report .report-title p{margin-top:4px}
 }
+
+.detail-block{margin:0 0 25px;border:1px solid #dfeae5;border-radius:16px;background:#fbfdfc;padding:14px;box-shadow:0 3px 12px rgba(22,53,40,.05)}
+.detail-block:last-of-type{margin-bottom:0}
+.detail-heading{display:flex;align-items:center;gap:9px;margin:2px 2px 13px;padding:8px 10px;border-radius:11px;background:var(--green-soft);color:var(--green-dark)}
+.detail-heading span{font-size:22px}.detail-heading h3{margin:0;font-size:19px}.detail-table th,.detail-table td{padding:11px 9px}.detail-table .detail-text{text-align:left;white-space:normal;min-width:170px}.detail-block tfoot td{font-weight:800}.expense-detail{margin-top:22px}
+@media(max-width:520px){.detail-block{padding:9px}.detail-heading h3{font-size:17px}.detail-table{font-size:14px}.detail-table th,.detail-table td{padding:9px 7px}.detail-table .detail-text{min-width:145px}}
