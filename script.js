@@ -53,14 +53,20 @@ function selectedYears(year){
 // ১২ মাস × ৳৫০০ = ৳৬,০০০ পাওনা। বকেয়া কখনো Database-এর কোনো
 // পুরোনো/ফাঁকা due ফিল্ড থেকে নেওয়া হবে না; প্রকৃত মাসিক জমা থেকেই হিসাব হবে।
 function normalizeYear(v){
-  const y=String(v ?? '').trim();
-  // পুরোনো ভুল/অতিরিক্ত 2025 রেকর্ড থাকলে সেটিকে 2024 হিসাবেই গণনা করা হবে।
-  return y==='2025'?'2024':y;
+  return String(v ?? '').trim();
+}
+
+// ২০২৫ সালে কোনো সদস্যের মাসিক জমা হয়নি। Database-এ থাকা পুরোনো/ভুল ২০২৫
+// payment record যেন কোনো হিসাব বা প্রদর্শনীতে জমা হিসেবে না আসে, তাই শুধু
+// হিসাবের স্তরে ২০২৫ সালের payment বাদ দেওয়া হচ্ছে; Database-এর কোনো data
+// পরিবর্তন বা delete করা হচ্ছে না।
+function isCountablePayment(p){
+  return String(p?.year ?? '').trim()!=='2025';
 }
 function memberPaid(m,year){
   const target = year==='all'||!year ? null : normalizeYear(year);
   return payments
-    .filter(p=>String(p.member_id)===String(m.id) && (target===null || normalizeYear(p.year)===target))
+    .filter(p=>isCountablePayment(p) && String(p.member_id)===String(m.id) && (target===null || normalizeYear(p.year)===target))
     .reduce((s,p)=>s+Number(p.paid_amount||0),0);
 }
 function memberRequired(m,year){
@@ -72,7 +78,7 @@ function memberDue(m,year){
 }
 function totalPaid(year){
   const target=year==='all'||!year?null:normalizeYear(year);
-  return payments.filter(p=>target===null||normalizeYear(p.year)===target)
+  return payments.filter(p=>isCountablePayment(p) && (target===null||normalizeYear(p.year)===target))
     .reduce((s,p)=>s+Number(p.paid_amount||0),0);
 }
 function totalRequired(year){return members.length*selectedYears(year).length*YEARLY_REQUIRED}
@@ -131,7 +137,7 @@ function renderPersonal(){
 }
 
 function paidCell(m,y,month){
-  const amount=payments.filter(p=>String(p.member_id)===String(m.id)&&Number(normalizeYear(p.year))===Number(normalizeYear(y))&&Number(p.month)===month).reduce((s,p)=>s+Number(p.paid_amount||0),0);
+  const amount=payments.filter(p=>isCountablePayment(p)&&String(p.member_id)===String(m.id)&&Number(normalizeYear(p.year))===Number(normalizeYear(y))&&Number(p.month)===month).reduce((s,p)=>s+Number(p.paid_amount||0),0);
   return amount>0?money(amount):'';
 }
 function renderAllMembers(){
@@ -145,7 +151,7 @@ function renderAllMembers(){
   }
   let h=`<div class="report-title"><h3>${esc(y)} সালের সকল সদস্যদের হিসাব</h3><p>প্রতি মাসে শুধু পরিশোধের পরিমাণ দেখানো হয়েছে</p></div><div class="table-wrap"><table class="member-report-table"><thead><tr><th>ক্রমিক</th><th class="name nowrap">সদস্যের নাম</th>${months.map(m=>`<th>${m}</th>`).join('')}<th>মোট পরিশোধ</th><th>মোট বাকি</th></tr></thead><tbody>`;
   members.forEach((m,i)=>{h+=`<tr><td>${Number(m.serial_no||i+1).toLocaleString('bn-BD')}</td><td class="name nowrap">${esc(m.name)}</td>`+months.map((_,mi)=>`<td>${paidCell(m,y,mi+1)}</td>`).join('')+`<td>${money(memberPaid(m,y))}</td><td>${money(memberDue(m,y))}</td></tr>`});
-  h+=`</tbody><tfoot><tr class="total-row"><td colspan="2">সর্বমোট</td>${months.map((_,mi)=>{const x=payments.filter(p=>Number(normalizeYear(p.year))===Number(normalizeYear(y))&&Number(p.month)===mi+1).reduce((s,p)=>s+Number(p.paid_amount||0),0);return `<td>${x>0?money(x):''}</td>`}).join('')}<td>${money(totalPaid(y))}</td><td>${money(totalDue(y))}</td></tr></tfoot></table></div>
+  h+=`</tbody><tfoot><tr class="total-row"><td colspan="2">সর্বমোট</td>${months.map((_,mi)=>{const x=payments.filter(p=>isCountablePayment(p)&&Number(normalizeYear(p.year))===Number(normalizeYear(y))&&Number(p.month)===mi+1).reduce((s,p)=>s+Number(p.paid_amount||0),0);return `<td>${x>0?money(x):''}</td>`}).join('')}<td>${money(totalPaid(y))}</td><td>${money(totalDue(y))}</td></tr></tfoot></table></div>
   <div class="member-summary"><div>মোট পরিশোধ<strong>${money(totalPaid(y))}</strong></div><div>মোট বাকি<strong>${money(totalDue(y))}</strong></div></div>${printButton('allMembersResult')}`;
   q('allMembersResult').innerHTML=h;
 }
@@ -234,6 +240,7 @@ function renderAdminData(){
     // ০ টাকার placeholder record database-এ থাকবে, কিন্তু Excel-এর প্রকৃত জমার
     // তালিকার সঙ্গে মিল রেখে Admin management-এ শুধু বাস্তব জমা দেখানো হবে।
     if(Number(p.paid_amount||0)<=0)return false;
+    if(String(p.year)==='2025')return false;
     if(selectedYear!=='all' && String(p.year)!==String(selectedYear))return false;
     if(selectedMonth!=='all' && Number(p.month)!==Number(selectedMonth))return false;
     if(!search)return true;
@@ -263,7 +270,7 @@ function openMainMenu(){setMenu(true)}
 function route(){const id=(location.hash||'#personal').slice(1);const valid=['personal','members','due','profitExpenseDetails','fund','notices','admin'];const active=valid.includes(id)?id:'personal';document.querySelectorAll('.page-section').forEach(s=>s.classList.toggle('active',s.id===active));document.querySelectorAll('#mobileMenu a[data-view]').forEach(a=>a.classList.toggle('active',a.dataset.view===active));setMenu(false)}
 function printSection(id){const target=q(id);if(!target)return;document.querySelectorAll('.print-target').forEach(x=>x.classList.remove('print-target'));document.querySelectorAll('.print-section').forEach(x=>x.classList.remove('print-section'));document.querySelectorAll('.print-header-generated').forEach(x=>x.remove());const parentSection=target.closest('.page-section');if(parentSection)parentSection.classList.add('print-section');target.classList.add('print-target');const header=document.createElement('div');header.className='print-header-generated';header.innerHTML='<h1>আল ইখওয়ান ইসলামী সংস্থা বাংলাদেশ</h1><p>বানিপুর, কেন্দুয়া, নেত্রকোনা, মোমেনশাহী, ঢাকা</p>';target.prepend(header);document.body.classList.add('printing-report');setTimeout(()=>{window.print();setTimeout(()=>{header.remove();target.classList.remove('print-target');if(parentSection)parentSection.classList.remove('print-section');document.body.classList.remove('printing-report')},800)},120)}
 function csvDownload(name,rows){const csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function downloadAllMembersCSV(){const y=q('allMembersYear').value||'all';const rows=[['ক্রমিক','সদস্যের নাম',...(y==='all'?years:months),'মোট পরিশোধ','মোট বাকি']];members.forEach((m,i)=>rows.push([m.serial_no||i+1,m.name,...(y==='all'?years.map(v=>memberPaid(m,v)):months.map((_,mi)=>payments.filter(p=>String(p.member_id)===String(m.id)&&Number(normalizeYear(p.year))===Number(normalizeYear(y))&&Number(p.month)===mi+1).reduce((s,p)=>s+Number(p.paid_amount||0),0))),memberPaid(m,y),memberDue(m,y)]));csvDownload(`members-${y}.csv`,rows)}
+function downloadAllMembersCSV(){const y=q('allMembersYear').value||'all';const rows=[['ক্রমিক','সদস্যের নাম',...(y==='all'?years:months),'মোট পরিশোধ','মোট বাকি']];members.forEach((m,i)=>rows.push([m.serial_no||i+1,m.name,...(y==='all'?years.map(v=>memberPaid(m,v)):months.map((_,mi)=>payments.filter(p=>isCountablePayment(p)&&String(p.member_id)===String(m.id)&&Number(normalizeYear(p.year))===Number(normalizeYear(y))&&Number(p.month)===mi+1).reduce((s,p)=>s+Number(p.paid_amount||0),0))),memberPaid(m,y),memberDue(m,y)]));csvDownload(`members-${y}.csv`,rows)}
 function downloadAssetsCSV(){csvDownload('fund-assets.csv',[['বছর','খাত','বিস্তারিত','পরিমাণ','তারিখ'],...assets.map(a=>[a.year,a.category,a.description,a.amount,a.date])])}
 
 document.addEventListener('DOMContentLoaded',()=>{
