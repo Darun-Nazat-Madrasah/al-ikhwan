@@ -86,9 +86,23 @@ function printButton(id){return `<div class="result-print"><button class="print-
 async function load(){
   if(!sb){q('totalResult').innerHTML='<div class="empty-state">Supabase configuration পাওয়া যায়নি।</div>';return;}
   q('totalResult').innerHTML='<div class="loading">ডাটা লোড হচ্ছে...</div>';
+  // Supabase-এর একবারের select সাধারণত সর্বোচ্চ ১০০০টি row ফেরত দিতে পারে।
+  // ২০২১–২০২৪ সালের payments মোট ১৬৩৬টি হওয়ায় একবারে নিলে ২০২৩/২০২৪-এর
+  // পরের রেকর্ডগুলো বাদ পড়ে যাচ্ছিল। তাই শুধু payments-এর জন্য সব row page করে নেওয়া হচ্ছে।
+  const fetchAllPayments=async()=>{
+    const rows=[];
+    const pageSize=1000;
+    for(let from=0;;from+=pageSize){
+      const {data,error}=await sb.from('payments').select('*').order('year').order('month').range(from,from+pageSize-1);
+      if(error)return {data:null,error};
+      rows.push(...(data||[]));
+      if(!data||data.length<pageSize)break;
+    }
+    return {data:rows,error:null};
+  };
   const [m,p,pr,e,a,n]=await Promise.all([
     sb.from('members').select('*').eq('status','active').order('serial_no',{ascending:true,nullsFirst:false}).order('created_at'),
-    sb.from('payments').select('*').order('year').order('month'),
+    fetchAllPayments(),
     sb.from('profits').select('*').order('year'),
     sb.from('expenses').select('*').order('date',{ascending:false}),
     sb.from('assets').select('*').eq('status','active').order('date',{ascending:false}),
