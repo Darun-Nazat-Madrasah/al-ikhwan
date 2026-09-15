@@ -163,6 +163,7 @@ footer{background:#076f45;color:#fff;text-align:center;padding:24px 0;font-size:
 /* FINAL report refinements */
 .nowrap{white-space:nowrap!important}
 .member-report-table th.name,.member-report-table td.name{white-space:nowrap!important}
+.admin-data td.name,.admin-data th.name{white-space:nowrap!important}
 .admin-select-row{display:grid;grid-template-columns:1fr;gap:12px;margin:0 0 14px}
 .admin-select-row select{width:100%}
 .admin-select-row .admin-open{width:100%;margin:0}
